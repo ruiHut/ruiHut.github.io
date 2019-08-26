@@ -1,1 +1,1 @@
-# ruiHut.github.io Thit repo is define my static blog use hugo build
+### ruiHut.github.io is static blog space use hugo build
