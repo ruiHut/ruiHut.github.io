@@ -1,0 +1,2 @@
+User-agent: *
+Sitemap: http://ruihut.github.io/sitemap.xml
