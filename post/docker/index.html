@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-  <title>Redis字典的实现 《Redis设计与实现》 - ZhouWang`s Blogs Space</title>
+  <title>Docker 那些事 - ZhouWang`s Blogs Space</title>
   <meta name="renderer" content="webkit" />
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
 
@@ -16,7 +16,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="#f8f5ec">
 
 
-<meta name="author" content="ZhouWang" /><meta name="description" content="redis hash 探究" /><meta name="keywords" content="ZhouWang blog, Github, Golang, Java, blog" />
+<meta name="author" content="ZhouWang" /><meta name="description" content="Docker 初体验" /><meta name="keywords" content="ZhouWang blog, Github, Golang, Java, blog" />
 
 
 
@@ -26,7 +26,7 @@
 <meta name="generator" content="Hugo 0.54.0 with even 4.0.0" />
 
 
-<link rel="canonical" href="http://ruihut.github.io/post/redis-hash/" />
+<link rel="canonical" href="http://ruihut.github.io/post/docker/" />
 <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
 <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
 <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
@@ -38,27 +38,27 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.1.20/dist/jquery.fancybox.min.css" integrity="sha256-7TyXnr2YU040zfSP+rEcz29ggW4j56/ujTPwjMzyqFY=" crossorigin="anonymous">
 
 
-<meta property="og:title" content="Redis字典的实现 《Redis设计与实现》" />
-<meta property="og:description" content="redis hash 探究" />
+<meta property="og:title" content="Docker 那些事" />
+<meta property="og:description" content="Docker 初体验" />
 <meta property="og:type" content="article" />
-<meta property="og:url" content="http://ruihut.github.io/post/redis-hash/" />
-<meta property="article:published_time" content="2019-08-28T11:09:30&#43;08:00"/>
-<meta property="article:modified_time" content="2019-08-28T11:09:30&#43;08:00"/>
+<meta property="og:url" content="http://ruihut.github.io/post/docker/" />
+<meta property="article:published_time" content="2019-08-28T12:07:48&#43;08:00"/>
+<meta property="article:modified_time" content="2019-08-28T12:07:48&#43;08:00"/>
 
-<meta itemprop="name" content="Redis字典的实现 《Redis设计与实现》">
-<meta itemprop="description" content="redis hash 探究">
-
-
-<meta itemprop="datePublished" content="2019-08-28T11:09:30&#43;08:00" />
-<meta itemprop="dateModified" content="2019-08-28T11:09:30&#43;08:00" />
-<meta itemprop="wordCount" content="891">
+<meta itemprop="name" content="Docker 那些事">
+<meta itemprop="description" content="Docker 初体验">
 
 
+<meta itemprop="datePublished" content="2019-08-28T12:07:48&#43;08:00" />
+<meta itemprop="dateModified" content="2019-08-28T12:07:48&#43;08:00" />
+<meta itemprop="wordCount" content="1224">
 
-<meta itemprop="keywords" content="redis,数据结构," />
+
+
+<meta itemprop="keywords" content="Docker," />
 <meta name="twitter:card" content="summary"/>
-<meta name="twitter:title" content="Redis字典的实现 《Redis设计与实现》"/>
-<meta name="twitter:description" content="redis hash 探究"/>
+<meta name="twitter:title" content="Docker 那些事"/>
+<meta name="twitter:description" content="Docker 初体验"/>
 
 <!--[if lte IE 9]>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/classlist/1.1.20170427/classList.min.js"></script>
@@ -121,15 +121,15 @@
           <article class="post">
     
     <header class="post-header">
-      <h1 class="post-title">Redis字典的实现 《Redis设计与实现》</h1>
+      <h1 class="post-title">Docker 那些事</h1>
 
       <div class="post-meta">
-        <span class="post-time"> 2019-08-28 11:09 </span>
+        <span class="post-time"> 2019-08-28 12:07 </span>
         <div class="post-category">
-            <a href="/categories/redis/"> redis </a>
+            <a href="/categories/Docker/"> Docker </a>
             </div>
-          <span class="more-meta"> 约 891 字 </span>
-          <span class="more-meta"> 预计阅读 2 分钟 </span>
+          <span class="more-meta"> 约 1224 字 </span>
+          <span class="more-meta"> 预计阅读 3 分钟 </span>
         <span id="busuanzi_container_page_pv" class="more-meta"> <span id="busuanzi_value_page_pv"><img src="/img/spinner.svg" alt="spinner.svg"/></span> 次阅读 </span>
       </div>
     </header>
@@ -139,12 +139,24 @@
   <div class="post-toc-content">
     <nav id="TableOfContents">
 <ul>
-<li><a href="#redis字典的实现-redis设计与实现">Redis字典的实现 《Redis设计与实现》</a>
+<li>
 <ul>
 <li>
 <ul>
-<li><a href="#字典的数据结构">字典的数据结构</a></li>
-<li><a href="#哈希表实现">哈希表实现</a></li>
+<li><a href="#序">序</a></li>
+<li><a href="#docker是什么">Docker是什么？</a>
+<ul>
+<li><a href="#wiki-定义">Wiki 定义</a></li>
+<li><a href="#同类技术有哪些以及简单对比-https-cloud-tencent-com-developer-article-1070871"><a href="https://cloud.tencent.com/developer/article/1070871">同类技术有哪些以及简单对比</a></a></li>
+<li><a href="#docker-主要组成成分">Docker 主要组成成分</a></li>
+</ul></li>
+<li><a href="#容器-docker-虚拟机">容器 Docker &amp; 虚拟机</a></li>
+<li><a href="#quick-start-快速开始">Quick Start 快速开始</a>
+<ul>
+<li><a href="#docker-下载与安装">Docker 下载与安装</a></li>
+<li><a href="#hello-world">Hello World</a></li>
+<li><a href="#简单使用">简单使用</a></li>
+</ul></li>
 </ul></li>
 </ul></li>
 </ul>
@@ -152,144 +164,129 @@
   </div>
 </div>
     <div class="post-content">
-      <h1 id="redis字典的实现-redis设计与实现">Redis字典的实现 《Redis设计与实现》</h1>
+      <h3 id="序">序</h3>
 
-<p>实现字典的方法有很多种:</p>
+<p>从今年 3 月份实习接触 golang 起，Docker 就时不时出现， 也曾看过几篇简介博文，但都没有后续。本文就对于 docker 进行一次简单的探究。</p>
+
+<h3 id="docker是什么">Docker是什么？</h3>
+
+<h4 id="wiki-定义">Wiki 定义</h4>
+
+<blockquote>
+<p>Wiki:  Docker is a set of platform-as-a-service (PaaS) products that use operating-system-level virtualization to deliver software in packages called containers.[5] Containers are isolated from one another and bundle their own software, libraries and configuration files; they can communicate with each other through well-defined channels.[6] All containers are run by a single operating-system kernel and are thus more lightweight than virtual machines.[7]</p>
+</blockquote>
+
+<p>简单翻译: Docker 是一个 Paas 产品可以用来以系统级的虚拟化, 用于在称为 <strong>容器（containers）</strong> 的包中交付产品。容器之间彼此隔离，彼此之间可以通过定义通道（channels）进行通信。 所有的容器都由一个操作系统内核线程（守护进程）。</p>
+
+<h4 id="同类技术有哪些以及简单对比-https-cloud-tencent-com-developer-article-1070871"><a href="https://cloud.tencent.com/developer/article/1070871">同类技术有哪些以及简单对比</a></h4>
+
+<h4 id="docker-主要组成成分">Docker 主要组成成分</h4>
+
+<p><img src="/static/images/docker_vm.png" alt="docker 与 虚拟机" />
+1. images 镜像
+    Docker 镜像是用于创建 Docker 容器的模板，类似与面向对象中的类（ps: docker 镜像不同与我们熟知的操作系统镜像文件，它更像一个 静态文件 + git 版本控制）
+2. container 容器
+    容器是独立运行的一个或一组实例， 类似与面向对象中的对象实例
+3. daemon docker 守护进程
+    执行镜像编译，容器启停以及分发，数据卷管理等，一个client可以与多个docker daemon通信。</p>
+
+<p>类比 Docker 与 面向对象
+|  Docker   | 面向对象  |
+|  ----  | ----  |
+| image 镜像  | class 类 |
+| container 容器  | object 对象 |
+| daemon 守护进程 | JVM 实例 |</p>
+
+<ol>
+<li>client 客户端
+与 Docker Deamon 交互。</li>
+<li>registry 镜像库
+用于存储 Docker 镜像，类似于 github，现有公共的 Registry DockerCloud.</li>
+<li>services 服务
+服务是docker swarm引入的概念，可以用于在多宿主机之间伸缩容器数目，支持负载均衡已经服务路由功能</li>
+</ol>
+
+<h3 id="容器-docker-虚拟机">容器 Docker &amp; 虚拟机</h3>
+
+<ol>
+<li><p>虚拟机 虚拟化
+先模拟出硬件再在其基础上虚拟出操作系统 Guest OS</p></li>
+
+<li><p>container  虚拟化
+是一种轻量级的虚拟化技术，它不需要模拟硬件创建虚拟机。在Linux系统里面，使用到Linux kernel的cgroups，namespace(ipc，network， user，pid，mount），capability等用于隔离运行环境和资源限制的技术，我们称之为容器。容器技术早就出现。例如Solaris Zones 和 BSD jails 就是非 Linux 操作系统上的容器，而用于 Linux 的容器技术也有很多如 Linux-Vserver、OpenVZ 和 FreeVPS。虽然这些技术都已经成熟，但是这些解决方案还没有将它们的容器支持集成到主流 Linux 内核。</p></li>
+
+<li><p>Docker 虚拟化</p></li>
+</ol>
+
+<blockquote>
+<p>总的来说，容器不等同于Docker，容器更不是虚拟机。</p>
+</blockquote>
+
+<h3 id="quick-start-快速开始">Quick Start 快速开始</h3>
+
+<h4 id="docker-下载与安装">Docker 下载与安装</h4>
+
+<p><a href="http://www.docker.com">Docker 官网</a> 根据自己的操作系统类型进行选择下载安装。</p>
+
+<h4 id="hello-world">Hello World</h4>
+
+<p>Docker 允许你在容器内运行应用程序， 使用 docker run 命令来在容器内运行一个应用程序。</p>
 <div class="highlight"><div class="chroma">
 <table class="lntable"><tr><td class="lntd">
 <pre class="chroma"><span class="lnt">1
 </span><span class="lnt">2
-</span><span class="lnt">3
 </span></pre></td>
 <td class="lntd">
-<pre class="chroma">1.  最简单的就是使用链表或数组，但是这种方式只适用于元素个数不多的情况下
-2.  要兼顾高效和简单性，可以使用哈希表； // Hash无法实现稳定性
-3.  如果追求更为稳定的性能特征，并且希望高效地实现排序操作的话，则可以使用更为复杂的平衡树</pre></td></tr></table>
+<pre class="chroma">root:$ docker run ubuntu:15.10 /bin/echo &#34;Hello World&#34;
+Hello World</pre></td></tr></table>
 </div>
 </div>
-<p>在众多可能的实现中，<strong>Redis 选择了高效且实现简单的哈希表作为字典的底层实现</strong></p>
+<p>解释： docker + run 指定运行一个容器 ubuntu:15.10 指定要运行的进行，Docker 会主机寻找是否存在，不存在，将 docker pull 镜像仓库 Docker Hub 下载公共镜像
+&quot;/bin/echo &quot;Hello World&quot;&quot; 在启动的容器内执行的命令</p>
 
-<h3 id="字典的数据结构">字典的数据结构</h3>
+<h4 id="简单使用">简单使用</h4>
 
-<p>源文件 dict.h/dict 给出了字典的定义</p>
+<p>对于 docker client 其命令与 git 类似，可以使用 docker --help 查看具体使用，下面举几个实用实例</p>
+
+<ol>
+<li><p>交互式容器 -i -t 参数，让docker 运行的容器实现“对话”的能力</p>
 <div class="highlight"><div class="chroma">
 <table class="lntable"><tr><td class="lntd">
-<pre class="chroma"><span class="lnt"> 1
-</span><span class="lnt"> 2
-</span><span class="lnt"> 3
-</span><span class="lnt"> 4
-</span><span class="lnt"> 5
-</span><span class="lnt"> 6
-</span><span class="lnt"> 7
-</span><span class="lnt"> 8
-</span><span class="lnt"> 9
-</span><span class="lnt">10
-</span><span class="lnt">11
-</span><span class="lnt">12
-</span><span class="lnt">13
+<pre class="chroma"><span class="lnt">1
 </span></pre></td>
 <td class="lntd">
-<pre class="chroma">/ ** 字典 ** 每个字典使用两个哈希表，用于实现渐进式 rehash */
- typedef struct dict {
-// 特定于类型的处理函数
- dictType *type;
-// 类型处理函数的私有数据 
-void *privdata;
-// 哈希表（2 个）
- dictht ht[2];
-// 记录 rehash 进度的标志，值为-1 表示 rehash 未进行
- int rehashidx;
-// 当前正在运作的安全迭代器数量
- int iterators;
-} dict;</pre></td></tr></table>
+<pre class="chroma">root: docker run -i -t ubuntu:15.10 /bin/bash</pre></td></tr></table>
 </div>
-</div>
-<p>以下是用于处理 dict 类型的 API ，它们的作用及相应的算法复杂度：
-<img src="https://img-blog.csdnimg.cn/20190121114540916.PNG?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80Mjk1NTU5OA==,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述" />
-注意 dict 类型使用了两个指针分别指向两个哈希表。
- 其中，<strong>0 号哈希表（ht[0]）是字典主要使用的哈希表，而 1 号哈希表（ht[1]）则只有在程序 对 0 号哈希表进行 rehash 时才使用。</strong>
-  接下来两个小节将对哈希表的实现，以及哈希表所使用的哈希算法进行介绍。</p>
+</div></li>
 
-<h3 id="哈希表实现">哈希表实现</h3>
-
-<p>哈希表实现由 dict.h/dictht 类型定义</p>
-<div class="highlight"><div class="chroma">
-<table class="lntable"><tr><td class="lntd">
-<pre class="chroma"><span class="lnt"> 1
-</span><span class="lnt"> 2
-</span><span class="lnt"> 3
-</span><span class="lnt"> 4
-</span><span class="lnt"> 5
-</span><span class="lnt"> 6
-</span><span class="lnt"> 7
-</span><span class="lnt"> 8
-</span><span class="lnt"> 9
-</span><span class="lnt">10
-</span><span class="lnt">11
-</span></pre></td>
-<td class="lntd">
-<pre class="chroma">/* * 哈希表 */
- typedef struct dictht {
-// 哈希表节点指针数组（俗称桶，bucket）
- dictEntry **table;
-// 指针数组的大小
- unsigned long size;
-// 指针数组的长度掩码，用于计算索引值 
-unsigned long sizemask;
-// 哈希表现有的节点数量 
-unsigned long used;
-} dictht;</pre></td></tr></table>
-</div>
-</div>
-<p>table 属性是一个数组，数组的每个元素都是一个指向 dictEntry 结构的指针。 每个 dictEntry 都保存着一个键值对，以及一个指向另一个 dictEntry 结构的指针：</p>
+<li><p>后台运行容器 -d</p>
 <div class="highlight"><div class="chroma">
 <table class="lntable"><tr><td class="lntd">
 <pre class="chroma"><span class="lnt">1
 </span><span class="lnt">2
-</span><span class="lnt">3
-</span><span class="lnt">4
-</span><span class="lnt">5
-</span><span class="lnt">6
-</span><span class="lnt">7
-</span><span class="lnt">8
-</span><span class="lnt">9
 </span></pre></td>
 <td class="lntd">
-<pre class="chroma">/* * 哈希表节点 */ 
-typedef struct dictEntry {
-// 键
- void *key;
-// 值 
-union { void *val; uint64_t u64; int64_t s64; } v;
-// 链往后继节点
- struct dictEntry *next;
-} dictEntry;</pre></td></tr></table>
+<pre class="chroma">docker run -d ubuntu:15.10 /bin/sh -c &#34;while true; do echo hello world; sleep 1; done&#34;
+2b1b7a428627c51ab8810d541d759f072b4fc75487eed05812646b8534a2fe63</pre></td></tr></table>
 </div>
 </div>
-<p>next 属性指向另一个 dictEntry 结构，多个 dictEntry 可以通过 next 指针串连成链表，从 这里可以看出，<strong>dictht 使用链地址法来处理键碰撞：</strong>当多个不同的键拥有相同的哈希值时，哈 希表用一个链表将这些键连接起来。
-下图展示了一个由 dictht 和数个 dictEntry 组成的哈希表例子：
-<img src="https://img-blog.csdnimg.cn/20190121114928999.PNG?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80Mjk1NTU5OA==,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述" />
-如果再加上之前列出的 dict 类型，那么整个字典结构可以表示如下：
-<img src="https://img-blog.csdnimg.cn/20190121114951791.PNG?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80Mjk1NTU5OA==,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述" />
-在上图的字典示例中，字典虽然创建了两个哈希表，但正在使用的只有 0 号哈希表，这说明字 典未进行 rehash 状态。</p>
+<p>返回的容器 ID 而非预期的 Hello World，可以通过 docker ps 查看正在运行的容器</p></li>
 
-<p>内容来自： 《Redis设计与实现》</p>
+<li><p>停止容器 docker stop (指定容器名或 ID)</p></li>
+</ol>
+
+<p>总的来说 docker client 与 git 命令很类似。 后续将在后续详解中示范。</p>
     </div>
 
     
 <footer class="post-footer">
       <div class="post-tags">
-          <a href="/tags/redis/">redis</a>
-          <a href="/tags/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/">数据结构</a>
+          <a href="/tags/Docker/">Docker</a>
           </div>
       <nav class="post-nav">
-        <a class="prev" href="/post/docker/">
-            <i class="iconfont icon-left"></i>
-            <span class="prev-text nav-default">Docker 那些事</span>
-            <span class="prev-text nav-mobile">上一篇</span>
-          </a>
-        <a class="next" href="/post/swich/">
-            <span class="next-text nav-default">Switch 机器级探究(C语言)</span>
+        
+        <a class="next" href="/post/redis-hash/">
+            <span class="next-text nav-default">Redis字典的实现 《Redis设计与实现》</span>
             <span class="next-text nav-mobile">下一篇</span>
             <i class="iconfont icon-right"></i>
           </a>
