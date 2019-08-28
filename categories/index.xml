@@ -5,10 +5,28 @@
     <link>http://ruihut.github.io/categories/</link>
     <description>Recent content in Categories on ZhouWang`s Blogs Space</description>
     <generator>Hugo -- gohugo.io</generator>
-    <language>en</language>
+    <language>zh-cn</language>
     
 	<atom:link href="http://ruihut.github.io/categories/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>redis</title>
+      <link>http://ruihut.github.io/categories/redis/</link>
+      <pubDate>Wed, 28 Aug 2019 11:09:30 +0800</pubDate>
+      
+      <guid>http://ruihut.github.io/categories/redis/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>计算机基础</title>
+      <link>http://ruihut.github.io/categories/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/</link>
+      <pubDate>Wed, 28 Aug 2019 10:57:05 +0800</pubDate>
+      
+      <guid>http://ruihut.github.io/categories/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/</guid>
+      <description></description>
+    </item>
     
   </channel>
 </rss>

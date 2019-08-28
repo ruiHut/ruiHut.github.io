@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>计算机基础 on ZhouWang`s Blogs Space</title>
+    <link>http://ruihut.github.io/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/</link>
+    <description>Recent content in 计算机基础 on ZhouWang`s Blogs Space</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>zh-cn</language>
+    <lastBuildDate>Wed, 28 Aug 2019 10:57:05 +0800</lastBuildDate>
+    
+	<atom:link href="http://ruihut.github.io/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>Switch 机器级探究(C语言)</title>
+      <link>http://ruihut.github.io/post/swich/</link>
+      <pubDate>Wed, 28 Aug 2019 10:57:05 +0800</pubDate>
+      
+      <guid>http://ruihut.github.io/post/swich/</guid>
+      <description>上图中对于一个简单的 C(此例中由于 C 只支持对于数字的比较，对于某些其他高级语言 例如 javascript 可以对字符进行比较。其具体对汇编代码略有不同) switch 语句进行</description>
+    </item>
+    
+  </channel>
+</rss>

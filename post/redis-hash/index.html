@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <title>Redis字典的实现 《Redis设计与实现》 - ZhouWang`s Blogs Space</title>
+  <meta name="renderer" content="webkit" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+<meta name="theme-color" content="#f8f5ec" />
+<meta name="msapplication-navbutton-color" content="#f8f5ec">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="#f8f5ec">
+
+
+<meta name="author" content="ZhouWang" /><meta name="description" content="redis hash 探究" /><meta name="keywords" content="ZhouWang blog, Github, Golang, Java, blog" />
+
+
+
+
+
+
+<meta name="generator" content="Hugo 0.54.0 with even 4.0.0" />
+
+
+<link rel="canonical" href="http://ruihut.github.io/post/redis-hash/" />
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+<link rel="manifest" href="/manifest.json">
+<link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
+
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+<link href="/dist/even.c2a46f00.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.1.20/dist/jquery.fancybox.min.css" integrity="sha256-7TyXnr2YU040zfSP+rEcz29ggW4j56/ujTPwjMzyqFY=" crossorigin="anonymous">
+
+
+<meta property="og:title" content="Redis字典的实现 《Redis设计与实现》" />
+<meta property="og:description" content="redis hash 探究" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://ruihut.github.io/post/redis-hash/" />
+<meta property="article:published_time" content="2019-08-28T11:09:30&#43;08:00"/>
+<meta property="article:modified_time" content="2019-08-28T11:09:30&#43;08:00"/>
+
+<meta itemprop="name" content="Redis字典的实现 《Redis设计与实现》">
+<meta itemprop="description" content="redis hash 探究">
+
+
+<meta itemprop="datePublished" content="2019-08-28T11:09:30&#43;08:00" />
+<meta itemprop="dateModified" content="2019-08-28T11:09:30&#43;08:00" />
+<meta itemprop="wordCount" content="891">
+
+
+
+<meta itemprop="keywords" content="redis,数据结构," />
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="Redis字典的实现 《Redis设计与实现》"/>
+<meta name="twitter:description" content="redis hash 探究"/>
+
+<!--[if lte IE 9]>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/classlist/1.1.20170427/classList.min.js"></script>
+<![endif]-->
+
+<!--[if lt IE 9]>
+  <script src="https://cdn.jsdelivr.net/npm/html5shiv@3.7.3/dist/html5shiv.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/respond.js@1.4.2/dest/respond.min.js"></script>
+<![endif]-->
+
+</head>
+<body>
+  <div id="mobile-navbar" class="mobile-navbar">
+  <div class="mobile-header-logo">
+    <a href="/" class="logo">Mock Space</a>
+  </div>
+  <div class="mobile-navbar-icon">
+    <span></span>
+    <span></span>
+    <span></span>
+  </div>
+</div>
+<nav id="mobile-menu" class="mobile-menu slideout-menu">
+  <ul class="mobile-menu-list">
+    <a href="/">
+        <li class="mobile-menu-item">首页</li>
+      </a><a href="/post/">
+        <li class="mobile-menu-item">归档</li>
+      </a><a href="/tags/">
+        <li class="mobile-menu-item">标签</li>
+      </a><a href="/categories/">
+        <li class="mobile-menu-item">分类</li>
+      </a>
+  </ul>
+</nav>
+  <div class="container" id="mobile-panel">
+    <header id="header" class="header">
+        <div class="logo-wrapper">
+  <a href="/" class="logo">Mock Space</a>
+</div>
+
+<nav class="site-navbar">
+  <ul id="menu" class="menu">
+    <li class="menu-item">
+        <a class="menu-item-link" href="/">首页</a>
+      </li><li class="menu-item">
+        <a class="menu-item-link" href="/post/">归档</a>
+      </li><li class="menu-item">
+        <a class="menu-item-link" href="/tags/">标签</a>
+      </li><li class="menu-item">
+        <a class="menu-item-link" href="/categories/">分类</a>
+      </li>
+  </ul>
+</nav>
+    </header>
+
+    <main id="main" class="main">
+      <div class="content-wrapper">
+        <div id="content" class="content">
+          <article class="post">
+    
+    <header class="post-header">
+      <h1 class="post-title">Redis字典的实现 《Redis设计与实现》</h1>
+
+      <div class="post-meta">
+        <span class="post-time"> 2019-08-28 11:09 </span>
+        <div class="post-category">
+            <a href="/categories/redis/"> redis </a>
+            </div>
+          <span class="more-meta"> 约 891 字 </span>
+          <span class="more-meta"> 预计阅读 2 分钟 </span>
+        <span id="busuanzi_container_page_pv" class="more-meta"> <span id="busuanzi_value_page_pv"><img src="/img/spinner.svg" alt="spinner.svg"/></span> 次阅读 </span>
+      </div>
+    </header>
+
+    <div class="post-toc" id="post-toc">
+  <h2 class="post-toc-title">文章目录</h2>
+  <div class="post-toc-content">
+    <nav id="TableOfContents">
+<ul>
+<li><a href="#redis字典的实现-redis设计与实现">Redis字典的实现 《Redis设计与实现》</a>
+<ul>
+<li>
+<ul>
+<li><a href="#字典的数据结构">字典的数据结构</a></li>
+<li><a href="#哈希表实现">哈希表实现</a></li>
+</ul></li>
+</ul></li>
+</ul>
+</nav>
+  </div>
+</div>
+    <div class="post-content">
+      <h1 id="redis字典的实现-redis设计与实现">Redis字典的实现 《Redis设计与实现》</h1>
+
+<p>实现字典的方法有很多种:</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span></pre></td>
+<td class="lntd">
+<pre class="chroma">1.  最简单的就是使用链表或数组，但是这种方式只适用于元素个数不多的情况下
+2.  要兼顾高效和简单性，可以使用哈希表； // Hash无法实现稳定性
+3.  如果追求更为稳定的性能特征，并且希望高效地实现排序操作的话，则可以使用更为复杂的平衡树</pre></td></tr></table>
+</div>
+</div>
+<p>在众多可能的实现中，<strong>Redis 选择了高效且实现简单的哈希表作为字典的底层实现</strong></p>
+
+<h3 id="字典的数据结构">字典的数据结构</h3>
+
+<p>源文件 dict.h/dict 给出了字典的定义</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span></pre></td>
+<td class="lntd">
+<pre class="chroma">/ ** 字典 ** 每个字典使用两个哈希表，用于实现渐进式 rehash */
+ typedef struct dict {
+// 特定于类型的处理函数
+ dictType *type;
+// 类型处理函数的私有数据 
+void *privdata;
+// 哈希表（2 个）
+ dictht ht[2];
+// 记录 rehash 进度的标志，值为-1 表示 rehash 未进行
+ int rehashidx;
+// 当前正在运作的安全迭代器数量
+ int iterators;
+} dict;</pre></td></tr></table>
+</div>
+</div>
+<p>以下是用于处理 dict 类型的 API ，它们的作用及相应的算法复杂度：
+<img src="https://img-blog.csdnimg.cn/20190121114540916.PNG?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80Mjk1NTU5OA==,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述" />
+注意 dict 类型使用了两个指针分别指向两个哈希表。
+ 其中，<strong>0 号哈希表（ht[0]）是字典主要使用的哈希表，而 1 号哈希表（ht[1]）则只有在程序 对 0 号哈希表进行 rehash 时才使用。</strong>
+  接下来两个小节将对哈希表的实现，以及哈希表所使用的哈希算法进行介绍。</p>
+
+<h3 id="哈希表实现">哈希表实现</h3>
+
+<p>哈希表实现由 dict.h/dictht 类型定义</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span></pre></td>
+<td class="lntd">
+<pre class="chroma">/* * 哈希表 */
+ typedef struct dictht {
+// 哈希表节点指针数组（俗称桶，bucket）
+ dictEntry **table;
+// 指针数组的大小
+ unsigned long size;
+// 指针数组的长度掩码，用于计算索引值 
+unsigned long sizemask;
+// 哈希表现有的节点数量 
+unsigned long used;
+} dictht;</pre></td></tr></table>
+</div>
+</div>
+<p>table 属性是一个数组，数组的每个元素都是一个指向 dictEntry 结构的指针。 每个 dictEntry 都保存着一个键值对，以及一个指向另一个 dictEntry 结构的指针：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span><span class="lnt">7
+</span><span class="lnt">8
+</span><span class="lnt">9
+</span></pre></td>
+<td class="lntd">
+<pre class="chroma">/* * 哈希表节点 */ 
+typedef struct dictEntry {
+// 键
+ void *key;
+// 值 
+union { void *val; uint64_t u64; int64_t s64; } v;
+// 链往后继节点
+ struct dictEntry *next;
+} dictEntry;</pre></td></tr></table>
+</div>
+</div>
+<p>next 属性指向另一个 dictEntry 结构，多个 dictEntry 可以通过 next 指针串连成链表，从 这里可以看出，<strong>dictht 使用链地址法来处理键碰撞：</strong>当多个不同的键拥有相同的哈希值时，哈 希表用一个链表将这些键连接起来。
+下图展示了一个由 dictht 和数个 dictEntry 组成的哈希表例子：
+<img src="https://img-blog.csdnimg.cn/20190121114928999.PNG?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80Mjk1NTU5OA==,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述" />
+如果再加上之前列出的 dict 类型，那么整个字典结构可以表示如下：
+<img src="https://img-blog.csdnimg.cn/20190121114951791.PNG?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80Mjk1NTU5OA==,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述" />
+在上图的字典示例中，字典虽然创建了两个哈希表，但正在使用的只有 0 号哈希表，这说明字 典未进行 rehash 状态。</p>
+
+<p>内容来自： 《Redis设计与实现》</p>
+    </div>
+
+    
+<footer class="post-footer">
+      <div class="post-tags">
+          <a href="/tags/redis/">redis</a>
+          <a href="/tags/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/">数据结构</a>
+          </div>
+      <nav class="post-nav">
+        
+        <a class="next" href="/post/swich/">
+            <span class="next-text nav-default">Switch 机器级探究(C语言)</span>
+            <span class="next-text nav-mobile">下一篇</span>
+            <i class="iconfont icon-right"></i>
+          </a>
+      </nav>
+    </footer>
+  </article>
+        </div>
+        
+  
+  
+
+  
+    <script src="https://utteranc.es/client.js"
+            repo="ruiHut/ruihut.github.io"
+            issue-term="pathname"
+            theme="github-light"
+            crossorigin="anonymous"
+            async>
+    </script>
+    <noscript>Please enable JavaScript to view the <a href="https://github.com/utterance">comments powered by utterances.</a></noscript>
+
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="social-links">
+      <a href="15197162859@163.com" class="iconfont icon-email" title="email"></a>
+      <a href="https://github.com/ruiHut" class="iconfont icon-github" title="github"></a>
+  <a href="http://ruihut.github.io/index.xml" type="application/rss+xml" class="iconfont icon-rss" title="rss"></a>
+</div>
+
+<div class="copyright">
+  <span class="copyright-year">
+    <span class="heart">
+      <i class="iconfont icon-heart"></i>
+    </span>
+    <span class="author">ZhouWang</span>
+  </span>
+</div>
+    </footer>
+
+    <div class="back-to-top" id="back-to-top">
+      <i class="iconfont icon-up"></i>
+    </div>
+  </div>
+  <script src="/lib/highlight/highlight.pack.js?v=20171001"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jquery@3.2.1/dist/jquery.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/slideout@1.0.1/dist/slideout.min.js" integrity="sha256-t+zJ/g8/KXIJMjSVQdnibt4dlaDxc9zXr/9oNPeWqdg=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.1.20/dist/jquery.fancybox.min.js" integrity="sha256-XVLffZaxoWfGUEbdzuLi7pwaUJv1cecsQJQqGLe7axY=" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/timeago.js@3.0.2/dist/timeago.min.js" integrity="sha256-jwCP0NAdCBloaIWTWHmW4i3snUNMHUNO+jr9rYd2iOI=" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/timeago.js@3.0.2/dist/timeago.locales.min.js" integrity="sha256-ZwofwC1Lf/faQCzN7nZtfijVV6hSwxjQMwXL4gn9qU8=" crossorigin="anonymous"></script>
+  <script><!-- NOTE: timeago.js uses the language code format like "zh_CN" (underscore and case sensitive) -->
+    var languageCode = "zh-cn".replace(/-/g, '_').replace(/_(.*)/, function ($0, $1) {return $0.replace($1, $1.toUpperCase());});
+    timeago().render(document.querySelectorAll('.timeago'), languageCode);
+    timeago.cancel();  
+  </script>
+<script type="text/javascript" src="/dist/even.26188efa.min.js"></script>
+
+
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+	ga('create', 'UA-138883536-1', 'auto');
+	ga('set', 'anonymizeIp', true);
+	ga('send', 'pageview');
+}
+</script>
+<script async src='https://www.google-analytics.com/analytics.js'></script>
+
+
+
+
+
+
+
+</body>
+</html>
