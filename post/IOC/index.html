@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <title>细说 IoC - ZhouWang`s Blogs Space</title>
+  <meta name="renderer" content="webkit" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+<meta name="theme-color" content="#f8f5ec" />
+<meta name="msapplication-navbutton-color" content="#f8f5ec">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="#f8f5ec">
+
+
+<meta name="author" content="ZhouWang" /><meta name="description" content="IoC" /><meta name="keywords" content="ZhouWang blog, Github, Golang, Java, blog" />
+
+
+
+
+
+
+<meta name="generator" content="Hugo 0.54.0 with even 4.0.0" />
+
+
+<link rel="canonical" href="http://ruihut.github.io/post/IOC/" />
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+<link rel="manifest" href="/manifest.json">
+<link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
+
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+<link href="/dist/even.c2a46f00.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.1.20/dist/jquery.fancybox.min.css" integrity="sha256-7TyXnr2YU040zfSP+rEcz29ggW4j56/ujTPwjMzyqFY=" crossorigin="anonymous">
+
+
+<meta property="og:title" content="细说 IoC" />
+<meta property="og:description" content="IoC" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://ruihut.github.io/post/IOC/" />
+<meta property="article:published_time" content="2019-08-28T18:07:18&#43;08:00"/>
+<meta property="article:modified_time" content="2019-08-28T18:07:18&#43;08:00"/>
+
+<meta itemprop="name" content="细说 IoC">
+<meta itemprop="description" content="IoC">
+
+
+<meta itemprop="datePublished" content="2019-08-28T18:07:18&#43;08:00" />
+<meta itemprop="dateModified" content="2019-08-28T18:07:18&#43;08:00" />
+<meta itemprop="wordCount" content="3061">
+
+
+
+<meta itemprop="keywords" content="Spring,IoC,Java," />
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="细说 IoC"/>
+<meta name="twitter:description" content="IoC"/>
+
+<!--[if lte IE 9]>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/classlist/1.1.20170427/classList.min.js"></script>
+<![endif]-->
+
+<!--[if lt IE 9]>
+  <script src="https://cdn.jsdelivr.net/npm/html5shiv@3.7.3/dist/html5shiv.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/respond.js@1.4.2/dest/respond.min.js"></script>
+<![endif]-->
+
+</head>
+<body>
+  <div id="mobile-navbar" class="mobile-navbar">
+  <div class="mobile-header-logo">
+    <a href="/" class="logo">Mock Space</a>
+  </div>
+  <div class="mobile-navbar-icon">
+    <span></span>
+    <span></span>
+    <span></span>
+  </div>
+</div>
+<nav id="mobile-menu" class="mobile-menu slideout-menu">
+  <ul class="mobile-menu-list">
+    <a href="/">
+        <li class="mobile-menu-item">首页</li>
+      </a><a href="/post/">
+        <li class="mobile-menu-item">归档</li>
+      </a><a href="/tags/">
+        <li class="mobile-menu-item">标签</li>
+      </a><a href="/categories/">
+        <li class="mobile-menu-item">分类</li>
+      </a>
+  </ul>
+</nav>
+  <div class="container" id="mobile-panel">
+    <header id="header" class="header">
+        <div class="logo-wrapper">
+  <a href="/" class="logo">Mock Space</a>
+</div>
+
+<nav class="site-navbar">
+  <ul id="menu" class="menu">
+    <li class="menu-item">
+        <a class="menu-item-link" href="/">首页</a>
+      </li><li class="menu-item">
+        <a class="menu-item-link" href="/post/">归档</a>
+      </li><li class="menu-item">
+        <a class="menu-item-link" href="/tags/">标签</a>
+      </li><li class="menu-item">
+        <a class="menu-item-link" href="/categories/">分类</a>
+      </li>
+  </ul>
+</nav>
+    </header>
+
+    <main id="main" class="main">
+      <div class="content-wrapper">
+        <div id="content" class="content">
+          <article class="post">
+    
+    <header class="post-header">
+      <h1 class="post-title">细说 IoC</h1>
+
+      <div class="post-meta">
+        <span class="post-time"> 2019-08-28 18:07 </span>
+        <div class="post-category">
+            <a href="/categories/Spring/"> Spring </a>
+            <a href="/categories/Java/"> Java </a>
+            </div>
+          <span class="more-meta"> 约 3061 字 </span>
+          <span class="more-meta"> 预计阅读 7 分钟 </span>
+        <span id="busuanzi_container_page_pv" class="more-meta"> <span id="busuanzi_value_page_pv"><img src="/img/spinner.svg" alt="spinner.svg"/></span> 次阅读 </span>
+      </div>
+    </header>
+
+    <div class="post-toc" id="post-toc">
+  <h2 class="post-toc-title">文章目录</h2>
+  <div class="post-toc-content">
+    <nav id="TableOfContents">
+<ul>
+<li>
+<ul>
+<li>
+<ul>
+<li><a href="#序">序</a></li>
+<li><a href="#ioc-控制反转是什么">IoC 控制反转是什么？</a>
+<ul>
+<li><a href="#wiki">Wiki</a></li>
+<li><a href="#traditional-realize-面向对象-传统方式的实现">Traditional realize （面向对象）传统方式的实现</a></li>
+<li><a href="#ioc-的实现">IoC 的实现</a></li>
+</ul></li>
+<li><a href="#spring-ioc">Spring IoC</a>
+<ul>
+<li><a href="#spring-ioc-容器">Spring IoC 容器</a>
+<ul>
+<li><a href="#spring-factory-有哪些">Spring Factory 有哪些？</a></li>
+</ul></li>
+<li><a href="#spring-ioc-运行原理">Spring IoC 运行原理</a>
+<ul>
+<li><a href="#试着手写一个-spring-factory">试着手写一个 Spring Factory</a></li>
+<li><a href="#spring-实现-beans-初始化">Spring 实现 Beans 初始化</a></li>
+<li><a href="#spring-如何实现依赖注入">Spring 如何实现依赖注入</a></li>
+</ul></li>
+<li><a href="#bean-的循环依赖">Bean 的循环依赖</a>
+<ul>
+<li><a href="#三种循环依赖的情况">三种循环依赖的情况</a></li>
+<li><a href="#构造器循环依赖">构造器循环依赖</a></li>
+<li><a href="#setter-循环依赖">setter 循环依赖</a>
+<ul>
+<li><a href="#非单例循环依赖">非单例循环依赖</a></li>
+</ul></li>
+</ul></li>
+</ul></li>
+<li><a href="#相关链接">相关链接</a></li>
+</ul></li>
+</ul></li>
+</ul>
+</nav>
+  </div>
+</div>
+    <div class="post-content">
+      <h3 id="序">序</h3>
+
+<p>IoC 是一种设计原则，降低代码控制流之间的耦合，本文将细说 IoC 的思想与基本实现，以及在 Spring 中的实现原理。</p>
+
+<h3 id="ioc-控制反转是什么">IoC 控制反转是什么？</h3>
+
+<h4 id="wiki">Wiki</h4>
+
+<blockquote>
+<p>In software engineering, inversion of control (IoC) is a programming principle(n. 原则). IoC inverts the flow of control as compared to traditional control flow. In IoC, custom-written portions of a computer program receive the flow of control from a generic framework. A software architecture（体系结构） with this design inverts control as compared to traditional procedural programming: in traditional programming, the custom code that expresses the purpose of the program calls into reusable libraries to take care of generic tasks, but with inversion of control, it is the framework that calls into the custom, or task-specific, code.</p>
+</blockquote>
+
+<p>是面向对象编程中的一种设计原则，可以用来减低计算机代码之间的耦合度，其中最常见的方式叫做依赖注入（Dependency Injection，简称DI）。通过控制反转，对象在被创建的时候，由一个调控系统内所有对象的外界实体，将其所依赖的对象的引用传递(注入)给它。</p>
+
+<blockquote>
+<p>Inversion of control is used to increase modularity of the program and make it extensible</p>
+</blockquote>
+
+<h4 id="traditional-realize-面向对象-传统方式的实现">Traditional realize （面向对象）传统方式的实现</h4>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span></pre></td>
+<td class="lntd">
+<pre class="chroma">    // 当 Class A 需要使用到 Class B 的对象 b 时，一般需要在 A 的代码中显式的 new 一个 B 的对象。伪代码如下
+    Class B {
+        say() {
+            printf(&#34;Hello World&#34;);
+        }
+    }
+
+    Class A {
+        doSometing() {
+            // prev 
+            B b = new B(); // 显示声明
+            b.say();
+            // after 
+        }
+    }</pre></td></tr></table>
+</div>
+</div>
+<h4 id="ioc-的实现">IoC 的实现</h4>
+
+<p>实现控制反转主要有两种方式：<strong>依赖注入和依赖查找</strong> 。两者的区别在于，前者是<strong>被动</strong>的接收对象，在类A的实例创建过程中即创建了依赖的B对象，通过类型或名称来判断将不同的对象注入到不同的属性中，而后者是主动索取相应类型的对象，获得依赖对象的时间也可以在代码中自由控制。</p>
+
+<ol>
+<li><p>依赖注入（Dependency Injection，简称DI）
+简单示例:</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span></pre></td>
+<td class="lntd">
+<pre class="chroma">Class B {
+    say() {
+        printf(&#34;Hello World&#34;);
+    }
+}
+
+Class A {
+    B b;
+
+    doSomething() {
+        // prev
+        b.say(); // 在 A 对象实例创建的时候 b 由框架帮助注入
+    }
+
+    // 基于构造函数实现
+    A(B b) {
+        this.b = b;
+    }
+}</pre></td></tr></table>
+</div>
+</div>
+<p>依赖注入的常见实现方式</p>
+
+<ul>
+<li>基于接口。实现特定接口以供外部容器注入所依赖类型的对象。</li>
+<li>基于 set 方法。实现特定熟悉的 public set 方法，来让外部容器调用传入所依赖类型的对象。</li>
+<li>基于构造函数。实现特定参数的构造函数，在新建对象时传入所依赖类型的对象。</li>
+<li>基于注解。基于Java的注解功能，在私有变量前加“@Autowired”等注解，不需要显式的定义以上三种代码，便可以让外部容器传入对应的对象。该方案相当于定义了public的set方法，但是因为没有真正的set方法，从而不会为了实现依赖注入导致暴露了不该暴露的接口（因为set方法只想让容器访问来注入而并不希望其他依赖此类的对象访问）。</li>
+</ul></li>
+</ol>
+
+<p>优缺点： 基于接口，set方法， 构造函数的（public）方式实现会暴露不该暴露的方式，让其他对象非希望的对象注入依赖对象。</p>
+
+<ol>
+<li>依赖查找
+依赖查找更加主动，在需要的时候通过调用框架提供的方法来获取对象，获取时需要提供相关的配置文件路径、key等信息来确定获取对象的状态</li>
+</ol>
+
+<h3 id="spring-ioc">Spring IoC</h3>
+
+<h4 id="spring-ioc-容器">Spring IoC 容器</h4>
+
+<blockquote>
+<p>Spring IoC 容器是 Spring 框架的核心。容器将创建对象，把它们连接在一起，配置它们，并管理他们的整个生命周期从创建到销毁。Spring 容器使用依赖注入（DI）来管理组成一个应用程序的组件。这些对象被称为 Spring Beans
+<a href="http://{server-url}/images/ioc.jpg">Spring container</a>
+所谓的 IoC 容器就是指的 Spring 中 Bean 工厂里面的 Map 存储结构（存储了 Bean 的实例）。</p>
+</blockquote>
+
+<h5 id="spring-factory-有哪些">Spring Factory 有哪些？</h5>
+
+<ol>
+<li><p>ApplicationContext 接口</p>
+
+<ul>
+<li>实现了 BeanFactory 接口</li>
+<li>实现 ApplicationContext 接口的工厂，可以获取到容器中具体的 Bean 对象</li>
+</ul></li>
+
+<li><p>BeanFactory 工厂（是 Spring 框架早期的创建 Bean 对象的工厂接口）</p>
+
+<ul>
+<li>实现 BeanFactory 接口的工厂，也可以获取到 Bean 对象</li>
+</ul></li>
+</ol>
+
+<p>两者区别</p>
+
+<blockquote>
+<p>简而言之，BeanFactory 提供了配置框架和基本功能，而 ApplicationContext 添加了更多的企业层级的功能。ApplicationContext 是 BeanFactory 的一个完整超集</p>
+</blockquote>
+
+<h4 id="spring-ioc-运行原理">Spring IoC 运行原理</h4>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span></pre></td>
+<td class="lntd">
+<pre class="chroma"> public static void main(String[] args) {   
+        ApplicationContext context = new FileSystemXmlApplicationContext(   
+                &#34;applicationContext.xml&#34;);   
+        Animal animal = (Animal) context.getBean(&#34;animal&#34;);   
+        animal.say();   
+    } </pre></td></tr></table>
+</div>
+</div>
+<p>以上代码究竟让 Animal 实例化对象的呢？</p>
+
+<h5 id="试着手写一个-spring-factory">试着手写一个 Spring Factory</h5>
+
+<p>Spring 的本质是一个 Bean 工厂，其管理 Bean 对象的生命周期。那么手写一个 Spring 需要一下几个部分</p>
+
+<ol>
+<li>Bean 对象
+<code>
+Class MyBean {
+// Bean ID
+private String id;
+// Bean class
+private String type;
+// Bean Property
+private Map&lt;Stringm Object&gt; properties = new HashMap&lt;Stirng, Object&gt;();
+}
+一个 Bean 对象包括 id, type, 和 properties
+</code></li>
+
+<li><p>Factory 对象</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span><span class="lnt">7
+</span></pre></td>
+<td class="lntd">
+<pre class="chroma">// 实现一个 bean 对象的管理接口 例如 getBean(String beanId) 上述中的通过 beanId 获取 bean 实例的方法
+Class MyFactory imp BaenFactory { 
+private Map&lt;String, Object&gt; beans = new HashMap&lt;String, Object&gt;;
+    
+@override
+public getBean(String beanId) { return beads.get(beanId); }
+}</pre></td></tr></table>
+</div>
+</div></li>
+
+<li><p>BaenFactory 接口用来规定 Factory 对 Beans 的方法</p></li>
+
+<li><p>配置 Bean 之间的依赖关系
+例如 Spring 可以通过 xml 配置文件、注解 等方式获取程序员设置的 Bean 依赖关系。</p></li>
+</ol>
+
+<p>接下来Spring 就开始加载我们的配置文件了，将我们配置的信息保存在一个HashMap中，HashMap的key就是Bean 的 Id ，HasMap 的value是这个Bean，只有这样我们才能通过context.getBean(&quot;animal&quot;)这个方法获得Animal这个类。</p>
+
+<h5 id="spring-实现-beans-初始化">Spring 实现 Beans 初始化</h5>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span></pre></td>
+<td class="lntd">
+<pre class="chroma"> (beanProperty.element(&#34;map&#34;) != null) {   
+                     Map&lt;String, Object&gt; propertiesMap = new HashMap&lt;String, Object&gt;();   
+                     Element propertiesListMap = (Element) beanProperty   
+                             .elements().get(0);   
+                     Iterator&lt;?&gt; propertiesIterator = propertiesListMap   
+                             .elements().iterator();   
+                     while (propertiesIterator.hasNext()) {   
+                         Element vet = (Element) propertiesIterator.next();   
+                         if (vet.getName().equals(&#34;entry&#34;)) {   
+                            String key = vet.attributeValue(&#34;key&#34;);   
+                            Iterator&lt;?&gt; valuesIterator = vet.elements()   
+                                    .iterator();   
+                            while (valuesIterator.hasNext()) {   
+                                Element value = (Element) valuesIterator.next();   
+                                if (value.getName().equals(&#34;value&#34;)) {   
+                                    propertiesMap.put(key, value.getText());   
+                                }   
+                                if (value.getName().equals(&#34;ref&#34;)) {   
+                                    propertiesMap.put(key, new String[] { value   
+                                            .attributeValue(&#34;bean&#34;) });   
+                                }   
+                            }   
+                        }   
+                    }   
+                    bean.getProperties().put(name, propertiesMap);   
+                } </pre></td></tr></table>
+</div>
+</div>
+<h5 id="spring-如何实现依赖注入">Spring 如何实现依赖注入</h5>
+
+<p>其实依赖注入的思想也很简单，它是通过反射机制实现的，在实例化一个类时，它通过反射调用类中set方法将事先保存在HashMap中的类属性注入到类中。</p>
+
+<ul>
+<li>实例化一个类</li>
+</ul>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span></pre></td>
+<td class="lntd">
+<pre class="chroma">   public static Object newInstance(String className) {   
+         Class&lt;?&gt; cls = null;   
+         Object obj = null;   
+         try {   
+             cls = Class.forName(className);   
+             obj = cls.newInstance();   
+         } catch (ClassNotFoundException e) {   
+             throw new RuntimeException(e);   
+         } catch (InstantiationException e) {   
+            throw new RuntimeException(e);   
+        } catch (IllegalAccessException e) {   
+            throw new RuntimeException(e);   
+        }   
+        return obj;   
+    }  </pre></td></tr></table>
+</div>
+</div>
+<ul>
+<li>将这个类的依赖注入进去</li>
+</ul>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span></pre></td>
+<td class="lntd">
+<pre class="chroma">   public static void setProperty(Object obj, String name, String value) {   
+         Class&lt;? extends Object&gt; clazz = obj.getClass();   
+         try {   
+             String methodName = returnSetMthodName(name);   
+             Method[] ms = clazz.getMethods();   
+             for (Method m : ms) {   
+                 if (m.getName().equals(methodName)) {   
+                     if (m.getParameterTypes().length == 1) {   
+                         Class&lt;?&gt; clazzParameterType = m.getParameterTypes()[0];   
+                        setFieldValue(clazzParameterType.getName(), value, m,   
+                                obj);   
+                        break;   
+                    }   
+                }   
+            }   
+        } catch (SecurityException e) {   
+            throw new RuntimeException(e);   
+        } catch (IllegalArgumentException e) {   
+            throw new RuntimeException(e);   
+        } catch (IllegalAccessException e) {   
+            throw new RuntimeException(e);   
+        } catch (InvocationTargetException e) {   
+            throw new RuntimeException(e);   
+        }   
+} </pre></td></tr></table>
+</div>
+</div>
+<ul>
+<li>注入</li>
+</ul>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span></pre></td>
+<td class="lntd">
+<pre class="chroma">  if (value instanceof Map) {   
+                 Iterator&lt;?&gt; entryIterator = ((Map&lt;?, ?&gt;) value).entrySet()   
+                         .iterator();   
+                 Map&lt;String, Object&gt; map = new HashMap&lt;String, Object&gt;();   
+                 while (entryIterator.hasNext()) {   
+                     Entry&lt;?, ?&gt; entryMap = (Entry&lt;?, ?&gt;) entryIterator.next();   
+                     if (entryMap.getValue() instanceof String[]) {   
+                         map.put((String) entryMap.getKey(),   
+                                getBean(((String[]) entryMap.getValue())[0]));   
+                    }   
+                }   
+                BeanProcesser.setProperty(obj, property, map);   
+            }  </pre></td></tr></table>
+</div>
+</div>
+<h4 id="bean-的循环依赖">Bean 的循环依赖</h4>
+
+<p>Spring 的核心是管理 Beans 的生命周期，从而提高相应服务。那么在上例中就不得不提到 Bean 的循环依赖问题</p>
+
+<blockquote>
+<p>循环依赖就是N个类中循环嵌套引用，如果在日常开发中我们用 new 对象的方式发生这种循环依赖的话程序会在运行时一直循环调用，直至内存溢出报错。</p>
+</blockquote>
+
+<h5 id="三种循环依赖的情况">三种循环依赖的情况</h5>
+
+<ol>
+<li>构造器循环依赖： 这种依赖spring是处理不了的，直 接抛出BeanCurrentlylnCreationException异常</li>
+<li>单例模式下的setter循环依赖： 通过“三级缓存”处理循环依赖。</li>
+<li>非单例循环依赖：无法处理。</li>
+</ol>
+
+<p>根据 【试着手写一个 Spring Factory 】我们了解到一个 Bean 对象的初始化大致分为三步</p>
+
+<ol>
+<li>createBeanInstance：实例化，其实也就是调用对象的构造方法实例化对象</li>
+<li>populateBean：填充属性，这一步主要是多bean的依赖属性进行填充</li>
+<li>将实例添加到 beansMap 中</li>
+</ol>
+
+<p>从上面讲述的单例bean初始化步骤我们可以知道，循环依赖主要发生在第一、第二步。也就是构造器循环依赖和field循环依赖。 接下来，我们具体看看spring是如何处理三种循环依赖的。</p>
+
+<h5 id="构造器循环依赖">构造器循环依赖</h5>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><span class="lnt">1
+</span></pre></td>
+<td class="lntd">
+<pre class="chroma">this.singletonsCurrentlylnCreation.add(beanName）将当前正要创建的bean 记录在缓存中。 Spring 容器将每一个正在创建的 bean 的 ID 放在一个 “当前创建 bean 池” 中，因此如果在创建 bean 过程中发现自己已经在 “当前创建bean 池” 里时，将抛出 BeanCurrentlylnCreationException 异常表示循环依赖；而对于创建完毕的bean 将从 “ 当前创建bean 池” 中清除掉。</pre></td></tr></table>
+</div>
+</div>
+<h5 id="setter-循环依赖">setter 循环依赖</h5>
+
+<p>Spring为了解决单例的循环依赖问题，使用了三级缓存。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span></pre></td>
+<td class="lntd">
+<pre class="chroma">/** Cache of singleton objects: bean name –&gt; bean instance */
+private final Map singletonObjects = new ConcurrentHashMap(256);
+/** Cache of singleton factories: bean name –&gt; ObjectFactory */
+private final Map&gt; singletonFactories = new HashMap&gt;(16);
+/** Cache of early singleton objects: bean name –&gt; bean instance */
+private final Map earlySingletonObjects = new HashMap(16);</pre></td></tr></table>
+</div>
+</div>
+<h6 id="非单例循环依赖">非单例循环依赖</h6>
+
+<p>对于“prototype”作用域bean, Spring 容器无法完成依赖注入，因为Spring 容器不进行缓 存“prototype”作用域的bean ，因此无法提前暴露一个创建中的bean 。</p>
+
+<h3 id="相关链接">相关链接</h3>
+
+<p><a href="https://en.wikipedia.org/wiki/Inversion_of_control">Wiki 英文</a>
+<a href="https://zh.wikipedia.org/wiki/%E6%8E%A7%E5%88%B6%E5%8F%8D%E8%BD%AC">Wiki 中文</a>
+<a href="https://zhuanlan.zhihu.com/p/41274946">知乎 Spring IoC原理分析</a>
+<a href="https://juejin.im/post/5b802611518825430a46ca45">掘金 手写一个 Spring</a>
+<a href="https://juejin.im/post/5c98a7b4f265da60ee12e9b2">Spring 循环依赖的问题</a></p>
+    </div>
+
+    
+<footer class="post-footer">
+      <div class="post-tags">
+          <a href="/tags/Spring/">Spring</a>
+          <a href="/tags/IoC/">IoC</a>
+          <a href="/tags/Java/">Java</a>
+          </div>
+      <nav class="post-nav">
+        
+        <a class="next" href="/post/docker/">
+            <span class="next-text nav-default">Docker 那些事</span>
+            <span class="next-text nav-mobile">下一篇</span>
+            <i class="iconfont icon-right"></i>
+          </a>
+      </nav>
+    </footer>
+  </article>
+        </div>
+        
+  
+  
+
+  
+    <script src="https://utteranc.es/client.js"
+            repo="ruiHut/ruihut.github.io"
+            issue-term="pathname"
+            theme="github-light"
+            crossorigin="anonymous"
+            async>
+    </script>
+    <noscript>Please enable JavaScript to view the <a href="https://github.com/utterance">comments powered by utterances.</a></noscript>
+
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="social-links">
+      <a href="15197162859@163.com" class="iconfont icon-email" title="email"></a>
+      <a href="https://github.com/ruiHut" class="iconfont icon-github" title="github"></a>
+  <a href="http://ruihut.github.io/index.xml" type="application/rss+xml" class="iconfont icon-rss" title="rss"></a>
+</div>
+
+<div class="copyright">
+  <span class="copyright-year">
+    <span class="heart">
+      <i class="iconfont icon-heart"></i>
+    </span>
+    <span class="author">ZhouWang</span>
+  </span>
+</div>
+    </footer>
+
+    <div class="back-to-top" id="back-to-top">
+      <i class="iconfont icon-up"></i>
+    </div>
+  </div>
+  <script src="/lib/highlight/highlight.pack.js?v=20171001"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jquery@3.2.1/dist/jquery.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/slideout@1.0.1/dist/slideout.min.js" integrity="sha256-t+zJ/g8/KXIJMjSVQdnibt4dlaDxc9zXr/9oNPeWqdg=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.1.20/dist/jquery.fancybox.min.js" integrity="sha256-XVLffZaxoWfGUEbdzuLi7pwaUJv1cecsQJQqGLe7axY=" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/timeago.js@3.0.2/dist/timeago.min.js" integrity="sha256-jwCP0NAdCBloaIWTWHmW4i3snUNMHUNO+jr9rYd2iOI=" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/timeago.js@3.0.2/dist/timeago.locales.min.js" integrity="sha256-ZwofwC1Lf/faQCzN7nZtfijVV6hSwxjQMwXL4gn9qU8=" crossorigin="anonymous"></script>
+  <script><!-- NOTE: timeago.js uses the language code format like "zh_CN" (underscore and case sensitive) -->
+    var languageCode = "zh-cn".replace(/-/g, '_').replace(/_(.*)/, function ($0, $1) {return $0.replace($1, $1.toUpperCase());});
+    timeago().render(document.querySelectorAll('.timeago'), languageCode);
+    timeago.cancel();  
+  </script>
+<script type="text/javascript" src="/dist/even.26188efa.min.js"></script>
+
+
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+	ga('create', 'UA-138883536-1', 'auto');
+	ga('set', 'anonymizeIp', true);
+	ga('send', 'pageview');
+}
+</script>
+<script async src='https://www.google-analytics.com/analytics.js'></script>
+
+
+
+
+
+
+
+</body>
+</html>

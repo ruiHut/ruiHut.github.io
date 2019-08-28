@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>IoC on ZhouWang`s Blogs Space</title>
+    <link>http://ruihut.github.io/tags/IoC/</link>
+    <description>Recent content in IoC on ZhouWang`s Blogs Space</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>zh-cn</language>
+    <lastBuildDate>Wed, 28 Aug 2019 18:07:18 +0800</lastBuildDate>
+    
+	<atom:link href="http://ruihut.github.io/tags/IoC/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>细说 IoC</title>
+      <link>http://ruihut.github.io/post/IOC/</link>
+      <pubDate>Wed, 28 Aug 2019 18:07:18 +0800</pubDate>
+      
+      <guid>http://ruihut.github.io/post/IOC/</guid>
+      <description>序 IoC 是一种设计原则，降低代码控制流之间的耦合，本文将细说 IoC 的思想与基本实现，以及在 Spring 中的实现原理。 IoC 控制反转是什么？ Wiki In software engineering, inversion of control (IoC) is a programming principle(n.</description>
+    </item>
+    
+  </channel>
+</rss>
