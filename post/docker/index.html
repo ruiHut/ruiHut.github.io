@@ -51,7 +51,7 @@
 
 <meta itemprop="datePublished" content="2019-08-28T12:07:48&#43;08:00" />
 <meta itemprop="dateModified" content="2019-08-28T12:07:48&#43;08:00" />
-<meta itemprop="wordCount" content="1224">
+<meta itemprop="wordCount" content="1221">
 
 
 
@@ -128,7 +128,7 @@
         <div class="post-category">
             <a href="/categories/Docker/"> Docker </a>
             </div>
-          <span class="more-meta"> 约 1224 字 </span>
+          <span class="more-meta"> 约 1221 字 </span>
           <span class="more-meta"> 预计阅读 3 分钟 </span>
         <span id="busuanzi_container_page_pv" class="more-meta"> <span id="busuanzi_value_page_pv"><img src="/img/spinner.svg" alt="spinner.svg"/></span> 次阅读 </span>
       </div>
@@ -182,13 +182,16 @@
 
 <h4 id="docker-主要组成成分">Docker 主要组成成分</h4>
 
-<p><img src="http://{server-url}/docker_vm.png" alt="docker 与 虚拟机" />
-1. images 镜像
-    Docker 镜像是用于创建 Docker 容器的模板，类似与面向对象中的类（ps: docker 镜像不同与我们熟知的操作系统镜像文件，它更像一个 静态文件 + git 版本控制）
-2. container 容器
-    容器是独立运行的一个或一组实例， 类似与面向对象中的对象实例
-3. daemon docker 守护进程
-    执行镜像编译，容器启停以及分发，数据卷管理等，一个client可以与多个docker daemon通信。</p>
+<p><img src="/images/docker_vm.png" alt="docker 与 虚拟机" /></p>
+
+<ol>
+<li>images 镜像
+Docker 镜像是用于创建 Docker 容器的模板，类似与面向对象中的类（ps: docker 镜像不同与我们熟知的操作系统镜像文件，它更像一个 静态文件 + git 版本控制）</li>
+<li>container 容器
+容器是独立运行的一个或一组实例， 类似与面向对象中的对象实例</li>
+<li>daemon docker 守护进程
+执行镜像编译，容器启停以及分发，数据卷管理等，一个client可以与多个docker daemon通信。</li>
+</ol>
 
 <p>类比 Docker 与 面向对象
 |  Docker   | 面向对象  |
