@@ -1,0 +1,820 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <title>Golang sync.Mutex 源码分析 - ZhouWang`s Blogs Space</title>
+  <meta name="renderer" content="webkit" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+<meta name="theme-color" content="#f8f5ec" />
+<meta name="msapplication-navbutton-color" content="#f8f5ec">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="#f8f5ec">
+
+
+<meta name="author" content="ZhouWang" /><meta name="description" content="序 本文整理了锁的分类与实现，抽取了 golang 1.12 的源码分析， 什么是锁？ 当我们在谈论锁的时候，我们在谈什么？ Wiki In computer science, a lock or mutex (from mutual exclusion) is a synchronization mechanism for enforcing limits on access to a" /><meta name="keywords" content="ZhouWang blog, Github, Golang, Java, blog" />
+
+
+
+
+
+
+<meta name="generator" content="Hugo 0.54.0 with even 4.0.0" />
+
+
+<link rel="canonical" href="http://ruihut.github.io/post/golang-lock/" />
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+<link rel="manifest" href="/manifest.json">
+<link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
+
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+<link href="/dist/even.c2a46f00.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.1.20/dist/jquery.fancybox.min.css" integrity="sha256-7TyXnr2YU040zfSP+rEcz29ggW4j56/ujTPwjMzyqFY=" crossorigin="anonymous">
+
+
+<meta property="og:title" content="Golang sync.Mutex 源码分析" />
+<meta property="og:description" content="序 本文整理了锁的分类与实现，抽取了 golang 1.12 的源码分析， 什么是锁？ 当我们在谈论锁的时候，我们在谈什么？ Wiki In computer science, a lock or mutex (from mutual exclusion) is a synchronization mechanism for enforcing limits on access to a" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://ruihut.github.io/post/golang-lock/" />
+<meta property="article:published_time" content="2019-08-29T13:59:14&#43;08:00"/>
+<meta property="article:modified_time" content="2019-08-29T13:59:14&#43;08:00"/>
+
+<meta itemprop="name" content="Golang sync.Mutex 源码分析">
+<meta itemprop="description" content="序 本文整理了锁的分类与实现，抽取了 golang 1.12 的源码分析， 什么是锁？ 当我们在谈论锁的时候，我们在谈什么？ Wiki In computer science, a lock or mutex (from mutual exclusion) is a synchronization mechanism for enforcing limits on access to a">
+
+
+<meta itemprop="datePublished" content="2019-08-29T13:59:14&#43;08:00" />
+<meta itemprop="dateModified" content="2019-08-29T13:59:14&#43;08:00" />
+<meta itemprop="wordCount" content="3613">
+
+
+
+<meta itemprop="keywords" content="golang,Mutex," />
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="Golang sync.Mutex 源码分析"/>
+<meta name="twitter:description" content="序 本文整理了锁的分类与实现，抽取了 golang 1.12 的源码分析， 什么是锁？ 当我们在谈论锁的时候，我们在谈什么？ Wiki In computer science, a lock or mutex (from mutual exclusion) is a synchronization mechanism for enforcing limits on access to a"/>
+
+<!--[if lte IE 9]>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/classlist/1.1.20170427/classList.min.js"></script>
+<![endif]-->
+
+<!--[if lt IE 9]>
+  <script src="https://cdn.jsdelivr.net/npm/html5shiv@3.7.3/dist/html5shiv.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/respond.js@1.4.2/dest/respond.min.js"></script>
+<![endif]-->
+
+</head>
+<body>
+  <div id="mobile-navbar" class="mobile-navbar">
+  <div class="mobile-header-logo">
+    <a href="/" class="logo">Mock Space</a>
+  </div>
+  <div class="mobile-navbar-icon">
+    <span></span>
+    <span></span>
+    <span></span>
+  </div>
+</div>
+<nav id="mobile-menu" class="mobile-menu slideout-menu">
+  <ul class="mobile-menu-list">
+    <a href="/">
+        <li class="mobile-menu-item">首页</li>
+      </a><a href="/post/">
+        <li class="mobile-menu-item">归档</li>
+      </a><a href="/tags/">
+        <li class="mobile-menu-item">标签</li>
+      </a><a href="/categories/">
+        <li class="mobile-menu-item">分类</li>
+      </a>
+  </ul>
+</nav>
+  <div class="container" id="mobile-panel">
+    <header id="header" class="header">
+        <div class="logo-wrapper">
+  <a href="/" class="logo">Mock Space</a>
+</div>
+
+<nav class="site-navbar">
+  <ul id="menu" class="menu">
+    <li class="menu-item">
+        <a class="menu-item-link" href="/">首页</a>
+      </li><li class="menu-item">
+        <a class="menu-item-link" href="/post/">归档</a>
+      </li><li class="menu-item">
+        <a class="menu-item-link" href="/tags/">标签</a>
+      </li><li class="menu-item">
+        <a class="menu-item-link" href="/categories/">分类</a>
+      </li>
+  </ul>
+</nav>
+    </header>
+
+    <main id="main" class="main">
+      <div class="content-wrapper">
+        <div id="content" class="content">
+          <article class="post">
+    
+    <header class="post-header">
+      <h1 class="post-title">Golang sync.Mutex 源码分析</h1>
+
+      <div class="post-meta">
+        <span class="post-time"> 2019-08-29 13:59 </span>
+        <div class="post-category">
+            <a href="/categories/golang/"> golang </a>
+            </div>
+          <span class="more-meta"> 约 3613 字 </span>
+          <span class="more-meta"> 预计阅读 8 分钟 </span>
+        <span id="busuanzi_container_page_pv" class="more-meta"> <span id="busuanzi_value_page_pv"><img src="/img/spinner.svg" alt="spinner.svg"/></span> 次阅读 </span>
+      </div>
+    </header>
+
+    <div class="post-toc" id="post-toc">
+  <h2 class="post-toc-title">文章目录</h2>
+  <div class="post-toc-content">
+    <nav id="TableOfContents">
+<ul>
+<li>
+<ul>
+<li><a href="#序">序</a></li>
+<li><a href="#什么是锁">什么是锁？</a>
+<ul>
+<li><a href="#wiki">Wiki</a></li>
+<li><a href="#操作系统的锁">操作系统的锁</a></li>
+<li><a href="#锁的种类">锁的种类</a></li>
+</ul></li>
+<li><a href="#golang-sync-mutex-实现">Golang sync.Mutex 实现</a>
+<ul>
+<li><a href="#wait-实现">wait 实现</a></li>
+<li><a href="#互斥锁">互斥锁</a>
+<ul>
+<li><a href="#简单示例">简单示例</a></li>
+<li><a href="#lock">Lock</a></li>
+<li><a href="#unlock">Unlock</a></li>
+</ul></li>
+<li><a href="#总结">总结</a></li>
+<li><a href="#参考">参考</a></li>
+</ul></li>
+</ul></li>
+</ul>
+</nav>
+  </div>
+</div>
+    <div class="post-content">
+      <h2 id="序">序</h2>
+
+<p>本文整理了锁的分类与实现，抽取了 golang 1.12 的源码分析，</p>
+
+<h2 id="什么是锁">什么是锁？</h2>
+
+<p>当我们在谈论锁的时候，我们在谈什么？</p>
+
+<h3 id="wiki">Wiki</h3>
+
+<blockquote>
+<p>In computer science, a lock or mutex (from mutual exclusion) is a synchronization mechanism for enforcing limits on access to a resource in an environment where there are many threads of execution. A lock is designed to enforce a mutual exclusion concurrency control policy.</p>
+</blockquote>
+
+<p>当我们的程序处于并发执行的过程中，由于并发执行的不确定性。对于<strong>多进程（线程）共享的资源访问</strong>时我们就需要对其进行同步处理，使并发结果符合预期。而锁就是一种同步机制，其设计的<strong>目的就是强制执行互斥并发控制策略</strong>.</p>
+
+<h3 id="操作系统的锁">操作系统的锁</h3>
+
+<ol>
+<li><p>硬件</p>
+
+<ul>
+<li>单处理器: 修改共享变量时禁止中断出现, 修改结束后允许中断。（但是屏蔽中断后，时钟中断也会被屏蔽。相当于这个时候我们把CPU交给了这个进程，他不会因为CPU时钟走完而切换，如果其不再打开中断，后果将是非常可怕的。总之，把屏蔽中断的权力交给用户级进程是很不明智的。）</li>
+<li>多处理器: 屏蔽中断只会对执行了中断指令的那个CPU有效，但是其他CPU还是有可能会改变共享内存中的数据的。许多现代计算机系统都提供了特殊硬件指令以允许能 <strong>原子地（不可中断地）</strong> 检查和修改字的内容或交换两个字的内容（比如 CAS，compare and swap）很多锁的软件方案都是通过调用原子操作（例如 Java：AtomicInteger 原子整数）来实现的。</li>
+</ul>
+
+<p><img src="/images/CAS.png" alt="CAS" /></p></li>
+
+<li><p>软件</p>
+
+<ul>
+<li>信号量: 信号量是E. W. Dijkstra在1965年提出的一种方法，它使用一个整型变量来累计唤醒次数。一个信号量的取值可以为0（表示没有保存下来的唤醒次数）或者为正值（表示有一个或者多个唤醒操作）。信号量除了初始化外只能通过两个标准原子操作：wait()和signal()来访问。这些操作原来被称为P（荷兰语Proberen，测试）和V（荷兰语Verhogen，增加）.wait()和signal()的定义可表示如下：</li>
+</ul>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span><span class="lnt">7
+</span><span class="lnt">8
+</span></pre></td>
+<td class="lntd">
+<pre class="chroma">wait(S) {
+    while(S&lt;=0)
+        ;   //no-op
+    S--
+}
+signal(S) {
+    S++
+}</pre></td></tr></table>
+</div>
+</div>
+<ul>
+<li>互斥量: 互斥量可以认为是取值只有0和1的信号量。我们经常使用就是这个。使用其来同步的代码如下</li>
+</ul>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span></pre></td>
+<td class="lntd">
+<pre class="chroma">do {
+    waiting(mutex);
+        //critical section
+    signal(mutex);
+        //remainder section
+}while(TRUE)</pre></td></tr></table>
+</div>
+</div></li>
+</ol>
+
+<h3 id="锁的种类">锁的种类</h3>
+
+<p>根据表现形式，常见的锁有互斥锁、自旋锁、读写锁。</p>
+
+<ul>
+<li><p>互斥锁。只有取得互斥锁的进程才能进入临界区，无论读写。</p></li>
+
+<li><p>自旋锁。自旋锁是指在进程试图取得锁失败的时候选择忙等待而不是阻塞自己。选择忙等待的优点在于如果该进程在其自身的CPU时间片内拿到锁（说明锁占用时间都比较短），则相比阻塞少了上下文切换。</p>
+
+<blockquote>
+<p>画外音： 注意这里还有一个隐藏条件：多处理器。因为单个处理器的情况下，由于当前自旋进程占用着CPU，持有锁的进程只有等待自旋进程耗尽CPU时间才有机会执行，这样CPU就空转了。</p>
+</blockquote></li>
+
+<li><p>读写锁。读写锁要根据进程进入临界区的具体行为（读，写）来决定锁的占用情况。这样锁的状态就有三种了：读模式加锁、写模式加锁、无锁。</p>
+
+<ol>
+<li><p>无锁。读/写进程都可以进入。</p></li>
+
+<li><p>读模式锁。读进程可以进入。写进程不可以进入。</p></li>
+
+<li><p>写模式锁。读/写进程都不可以进入。</p></li>
+</ol></li>
+</ul>
+
+<h2 id="golang-sync-mutex-实现">Golang sync.Mutex 实现</h2>
+
+<p>sync.Mutex是Go标准库中常用的一个排外锁。当一个 goroutine 获得了这个锁的拥有权后， 其它请求锁的 goroutine 就会阻塞在 Lock 方法的调用上，直到锁被释放。</p>
+
+<p><img src="/images/mutex.png" alt="mutex" /></p>
+
+<h3 id="wait-实现">wait 实现</h3>
+
+<p>上述中提到的锁，准确而言是信号量，其实现方式有两种： wait 忙等待、阻塞自己</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span></pre></td>
+<td class="lntd">
+<pre class="chroma">// 忙等待
+wait(s) {
+    while(s &lt;= 0); // do nothing
+
+    s--;
+}
+
+// 阻塞
+wait(semaphore *s) {
+    if (s.value &lt;= 0) {
+        // add this process to  s.list;
+        // block()
+    }
+
+    s--;
+}</pre></td></tr></table>
+</div>
+</div>
+<p>忙等待和阻塞方式各有优劣：</p>
+
+<ul>
+<li>忙等待会使 CPU 空转，好处是如果在当前时间片内锁被其他进程释放，当前进程直接就能<strong>直接拿到锁</strong>而不需要 CPU 再进行进程调度。适用于锁占用时间较短的情况，且不适合于单处理器。</li>
+<li>阻塞不会导致 CPU 空转，但是进程切换也需要代价，比如上下文切换，CPU Cache Miss（缓存失效）</li>
+</ul>
+
+<h3 id="互斥锁">互斥锁</h3>
+
+<h4 id="简单示例">简单示例</h4>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span></pre></td>
+<td class="lntd">
+<pre class="chroma">func count() {
+	var mutex sync.Mutex
+	count := 0
+
+	for r := 0; r &lt; 50; r++ {
+		go func() {
+			mutex.Lock()
+			count += 1
+			mutex.Unlock()
+		}()
+	}
+
+	time.Sleep(time.Second)
+	fmt.Println(&#34;the count is : &#34;, count) // res:  50
+}</pre></td></tr></table>
+</div>
+</div>
+<p>上例使用 Mutex 实现对 count 进行同步。下面根据源码分析 golang Mutex 如何实现。</p>
+
+<p>版本 /sync/mutex.go 1.12.7</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span></pre></td>
+<td class="lntd">
+<pre class="chroma">// A Mutex is a mutual exclusion lock. 
+// The zero value for a Mutex is an unlocked mutex.
+//
+// A Mutex must not be copied after first use.
+// Mutex 是一个互斥锁， 0 代表解除互斥，第一次使用后不允许复制。
+type Mutex struct {
+	state int32  // 状态 
+	sema  uint32 // 非负数， 信号量
+}
+
+const (
+	mutexLocked = 1 &lt;&lt; iota // mutex is locked
+	mutexWoken
+	mutexStarving
+	mutexWaiterShift = iota
+
+    // Mutex can be in 2 modes of operations: normal and starvation. 互斥有两种模式：  正常和饥饿
+}</pre></td></tr></table>
+</div>
+</div>
+<p>其使用信号量的方式来实现的。sema就是信号量，一个非负数；state表示Mutex的状态。</p>
+
+<ul>
+<li>mutexLocked = 1      表示锁是否可用（0可用，1被别的goroutine占用），</li>
+<li>mutexWoken = 2         表示mutex是否被唤醒，</li>
+<li>mutexStarving  = 4     互斥有两种模式：  正常和饥饿 Go 1.9中增加了饥饿模式，让锁变得更公平，不公平的等待时间限制在1毫秒</li>
+
+<li><p>mutexWaiterShift = 1  表示统计阻塞在该mutex上的goroutine数目需要移位的数值。将3个常量映射到state上就是</p></li>
+
+<li><p>normal: 在正常模式下，等待者按FIFO顺序排队，但是被唤醒的等待者不拥有互斥对象，而是与新到达的goroutine争夺所有权, 新到的goroutine有一个优势——它们已经运行在CPU上，而且可能有很多goroutine，所以一个被叫醒的服务员很有可能会输掉。在这种情况下，它被排在等待队列的前面。如果一个服务端在超过1ms的时间内没有获取互斥量，它将互斥对象切换到饥饿模式。</p></li>
+
+<li><p>starving: 在饥饿模式下，互斥锁的所有权直接从解锁 goroutine 传递给队列前面的服务员。新到达的goroutine 不会尝试获取互斥体，即使它看起来是解锁的，也不会尝试旋转。相反，它们将自己排在等待队列的末尾。</p></li>
+</ul>
+
+<h4 id="lock">Lock</h4>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span><span class="lnt">43
+</span><span class="lnt">44
+</span><span class="lnt">45
+</span><span class="lnt">46
+</span><span class="lnt">47
+</span><span class="lnt">48
+</span><span class="lnt">49
+</span><span class="lnt">50
+</span><span class="lnt">51
+</span><span class="lnt">52
+</span><span class="lnt">53
+</span><span class="lnt">54
+</span><span class="lnt">55
+</span><span class="lnt">56
+</span><span class="lnt">57
+</span><span class="lnt">58
+</span><span class="lnt">59
+</span><span class="lnt">60
+</span><span class="lnt">61
+</span><span class="lnt">62
+</span><span class="lnt">63
+</span><span class="lnt">64
+</span><span class="lnt">65
+</span><span class="lnt">66
+</span><span class="lnt">67
+</span><span class="lnt">68
+</span><span class="lnt">69
+</span><span class="lnt">70
+</span><span class="lnt">71
+</span><span class="lnt">72
+</span><span class="lnt">73
+</span><span class="lnt">74
+</span><span class="lnt">75
+</span><span class="lnt">76
+</span><span class="lnt">77
+</span><span class="lnt">78
+</span><span class="lnt">79
+</span><span class="lnt">80
+</span><span class="lnt">81
+</span><span class="lnt">82
+</span><span class="lnt">83
+</span><span class="lnt">84
+</span><span class="lnt">85
+</span><span class="lnt">86
+</span><span class="lnt">87
+</span><span class="lnt">88
+</span><span class="lnt">89
+</span><span class="lnt">90
+</span><span class="lnt">91
+</span><span class="lnt">92
+</span><span class="lnt">93
+</span><span class="lnt">94
+</span></pre></td>
+<td class="lntd">
+<pre class="chroma">// Lock locks m.
+// If the lock is already in use, the calling goroutine
+// blocks until the mutex is available.
+func (m *Mutex) Lock() {        // 如果已经被某个 goroutine 使用，将阻塞直到（ mutex.sema = 0 ）mutex 可用
+	// Fast path: grab unlocked mutex.
+	if atomic.CompareAndSwapInt32(&amp;m.state, 0, mutexLocked) {    // CAS 比较是否为 0 如果为 0 则置 1 表示 lock 成功
+		if race.Enabled {  // 竞态检测，并标记 [详细了解 race](https://www.cnblogs.com/yjf512/p/5144211.html)
+			race.Acquire(unsafe.Pointer(m))  
+		}
+		return
+	}
+
+	var waitStartTime int64
+	starving := false
+	awoke := false
+    // 自旋数
+	iter := 0
+    // 保存当前协程状态
+	old := m.state
+	for {
+		// Don&#39;t spin in starvation mode, ownership is handed off to waiters
+		// so we won&#39;t be able to acquire the mutex anyway.
+        // 第一个条件是 state 已被锁状态，且不是饥饿状态。如果时饥饿状态，自旋是没有用的，锁的拥有权直接交给了等待队列的第一个。
+        // 第二个条件是还可以自旋，多核、压力不大并且在一定次数内可以自旋
+		if old&amp;(mutexLocked|mutexStarving) == mutexLocked &amp;&amp; runtime_canSpin(iter) { // 自旋 设状态为 mutexWoken
+            // remove detail code
+			continue
+		}
+		new := old
+		// Don&#39;t try to acquire starving mutex, new arriving goroutines must queue.
+		if old&amp;mutexStarving == 0 {
+			new |= mutexLocked
+		}
+		if old&amp;(mutexLocked|mutexStarving) != 0 { 
+			new += 1 &lt;&lt; mutexWaiterShift
+		}
+		// The current goroutine switches mutex to starvation mode.
+		// But if the mutex is currently unlocked, don&#39;t do the switch.
+		// Unlock expects that starving mutex has waiters, which will not
+		// be true in this case.
+		if starving &amp;&amp; old&amp;mutexLocked != 0 { // 任然为 mutexLocked|mutexStarving 状态，标志位偏移，加入阻塞队列
+			new |= mutexStarving
+		}
+		if awoke {
+			// The goroutine has been woken from sleep,
+			// so we need to reset the flag in either case.
+			if new&amp;mutexWoken == 0 {
+				throw(&#34;sync: inconsistent mutex state&#34;)
+			}
+			new &amp;^= mutexWoken
+		}
+		if atomic.CompareAndSwapInt32(&amp;m.state, old, new) {
+			if old&amp;(mutexLocked|mutexStarving) == 0 {
+				break // locked the mutex with CAS
+			}
+			// If we were already waiting before, queue at the front of the queue.
+			queueLifo := waitStartTime != 0
+			if waitStartTime == 0 {
+				waitStartTime = runtime_nanotime()
+			}
+			runtime_SemacquireMutex(&amp;m.sema, queueLifo)
+			starving = starving || runtime_nanotime()-waitStartTime &gt; starvationThresholdNs // 等待时间超过 1 ns，进入饥饿状态
+			old = m.state
+			if old&amp;mutexStarving != 0 {
+				// If this goroutine was woken and mutex is in starvation mode,
+				// ownership was handed off to us but mutex is in somewhat
+				// inconsistent state: mutexLocked is not set and we are still
+				// accounted as waiter. Fix that.
+				if old&amp;(mutexLocked|mutexWoken) != 0 || old&gt;&gt;mutexWaiterShift == 0 {
+					throw(&#34;sync: inconsistent mutex state&#34;)
+				}
+				delta := int32(mutexLocked - 1&lt;&lt;mutexWaiterShift)
+				if !starving || old&gt;&gt;mutexWaiterShift == 1 {
+					// Exit starvation mode.
+					// Critical to do it here and consider wait time.
+					// Starvation mode is so inefficient, that two goroutines
+					// can go lock-step infinitely once they switch mutex
+					// to starvation mode.
+					delta -= mutexStarving
+				}
+				atomic.AddIntt32(&amp;m.state, delta)
+				break
+			}
+			awoke = true
+			iter = 0
+		} else {
+			old = m.state
+		}
+	}
+
+	if race.Enabled {
+		race.Acquire(unsafe.Pointer(m))
+	}
+}</pre></td></tr></table>
+</div>
+</div>
+<h4 id="unlock">Unlock</h4>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span><span class="lnt">43
+</span></pre></td>
+<td class="lntd">
+<pre class="chroma">// 当没有锁定的对象进行解锁将会是一个运行时错误，允许一个 goroutine 锁定一个互斥锁安排另一个 goroutine 解锁
+func (m *Mutex) Unlock() {
+
+	// Fast path: drop lock bit.
+    // 如果state不是处于锁的状态, 那么就是Unlock根本没有加锁的mutex, panic
+	new := atomic.AddInt32(&amp;m.state, -mutexLocked) // state--;
+	if (new+mutexLocked)&amp;mutexLocked == 0 { // -&gt; (new + 1) &amp; 1 == 0 ？-&gt; new == 0 ？
+		throw(&#34;sync: unlock of unlocked mutex&#34;)
+	}
+
+    // 释放了锁，还得需要通知其它等待者
+    // 锁如果处于饥饿状态，直接交给等待队列的第一个, 唤醒它，让它去获取锁
+    // 锁如果处于正常状态，
+
+    // 正常状态
+	if new&amp;mutexStarving == 0 {
+		old := new
+		for {
+			// If there are no waiters or a goroutine has already
+			// been woken or grabbed the lock, no need to wake anyone.
+			// In starvation mode ownership is directly handed off from unlocking
+			// goroutine to the next waiter. We are not part of this chain,
+			// since we did not observe mutexStarving when we unlocked the mutex above.
+			// So get off the way.
+			if old&gt;&gt;mutexWaiterShift == 0 || old&amp;(mutexLocked|mutexWoken|mutexStarving) != 0 {
+				return
+			}
+			// 将等待的goroutine数减一，并设置woken标识，并通过信号量唤醒某个阻塞的 goroutine 去获取锁.
+			new = (old - 1&lt;&lt;mutexWaiterShift) | mutexWoken
+			if atomic.CompareAndSwapInt32(&amp;m.state, old, new) {
+				runtime_Semrelease(&amp;m.sema, false)
+				return
+			}
+			old = m.state
+		}
+	} else {
+        // 饥饿模式下， 直接将锁的拥有权传给等待队列中的第一个.
+        // 注意此时state的mutexLocked还没有加锁，唤醒的goroutine会设置它。
+        // 在此期间，如果有新的goroutine来请求锁， 因为mutex处于饥饿状态， mutex还是被认为处于锁状态，
+        // 新来的goroutine不会把锁抢过去.
+		runtime_Semrelease(&amp;m.sema, true)
+	}
+}</pre></td></tr></table>
+</div>
+</div>
+<h3 id="总结">总结</h3>
+
+<p>对于 Lock 操作：
+* Mutex 使用 CAS 对信号量的进行修改
+* 使用 自旋 1 ns 避免频繁切换协程状态
+* 1.9 加入 starving 状态，保证了竞态的公平性。</p>
+
+<p>对于 Unlock 操作：
+* Mutex 的上锁没有绑定 gorouting 对象，使得会发生其他协程可以 Unlock 当前的锁状态
+* 使用信号量唤醒阻塞的 goroutine 去获得锁</p>
+
+<p>如看完笔者粗略的注释看完后不是特别理解，建议可以查看 Mutex 源码注释，以及参考链接。</p>
+
+<h3 id="参考">参考</h3>
+
+<ul>
+<li><a href="https://mp.weixin.qq.com/s/0NwygbKYBoLZGEE9Vnxp0A">当我们谈论锁，我们谈什么</a></li>
+<li><a href="https://mp.weixin.qq.com/s/9kCO2Oo3bGa-85aiMUm6BQ">Go 语言中的锁源码实现：Mutex</a></li>
+<li><a href="https://colobu.com/2018/12/18/dive-into-sync-mutex/">sync.mutex 源代码分析</a></li>
+</ul>
+    </div>
+
+    
+<footer class="post-footer">
+      <div class="post-tags">
+          <a href="/tags/golang/">golang</a>
+          <a href="/tags/Mutex/">Mutex</a>
+          </div>
+      <nav class="post-nav">
+        
+        <a class="next" href="/post/IOC/">
+            <span class="next-text nav-default">细说 IoC</span>
+            <span class="next-text nav-mobile">下一篇</span>
+            <i class="iconfont icon-right"></i>
+          </a>
+      </nav>
+    </footer>
+  </article>
+        </div>
+        
+  
+  
+
+  
+    <script src="https://utteranc.es/client.js"
+            repo="ruiHut/ruihut.github.io"
+            issue-term="pathname"
+            theme="github-light"
+            crossorigin="anonymous"
+            async>
+    </script>
+    <noscript>Please enable JavaScript to view the <a href="https://github.com/utterance">comments powered by utterances.</a></noscript>
+
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="social-links">
+      <a href="15197162859@163.com" class="iconfont icon-email" title="email"></a>
+      <a href="https://github.com/ruiHut" class="iconfont icon-github" title="github"></a>
+  <a href="http://ruihut.github.io/index.xml" type="application/rss+xml" class="iconfont icon-rss" title="rss"></a>
+</div>
+
+<div class="copyright">
+  <span class="copyright-year">
+    <span class="heart">
+      <i class="iconfont icon-heart"></i>
+    </span>
+    <span class="author">ZhouWang</span>
+  </span>
+</div>
+    </footer>
+
+    <div class="back-to-top" id="back-to-top">
+      <i class="iconfont icon-up"></i>
+    </div>
+  </div>
+  <script src="/lib/highlight/highlight.pack.js?v=20171001"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jquery@3.2.1/dist/jquery.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/slideout@1.0.1/dist/slideout.min.js" integrity="sha256-t+zJ/g8/KXIJMjSVQdnibt4dlaDxc9zXr/9oNPeWqdg=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.1.20/dist/jquery.fancybox.min.js" integrity="sha256-XVLffZaxoWfGUEbdzuLi7pwaUJv1cecsQJQqGLe7axY=" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/timeago.js@3.0.2/dist/timeago.min.js" integrity="sha256-jwCP0NAdCBloaIWTWHmW4i3snUNMHUNO+jr9rYd2iOI=" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/timeago.js@3.0.2/dist/timeago.locales.min.js" integrity="sha256-ZwofwC1Lf/faQCzN7nZtfijVV6hSwxjQMwXL4gn9qU8=" crossorigin="anonymous"></script>
+  <script><!-- NOTE: timeago.js uses the language code format like "zh_CN" (underscore and case sensitive) -->
+    var languageCode = "zh-cn".replace(/-/g, '_').replace(/_(.*)/, function ($0, $1) {return $0.replace($1, $1.toUpperCase());});
+    timeago().render(document.querySelectorAll('.timeago'), languageCode);
+    timeago.cancel();  
+  </script>
+<script type="text/javascript" src="/dist/even.26188efa.min.js"></script>
+
+
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+	ga('create', 'UA-138883536-1', 'auto');
+	ga('set', 'anonymizeIp', true);
+	ga('send', 'pageview');
+}
+</script>
+<script async src='https://www.google-analytics.com/analytics.js'></script>
+
+
+
+
+
+
+
+</body>
+</html>
