@@ -51,7 +51,7 @@
 
 <meta itemprop="datePublished" content="2019-08-29T13:59:14&#43;08:00" />
 <meta itemprop="dateModified" content="2019-08-29T13:59:14&#43;08:00" />
-<meta itemprop="wordCount" content="3613">
+<meta itemprop="wordCount" content="3608">
 
 
 
@@ -128,7 +128,7 @@
         <div class="post-category">
             <a href="/categories/golang/"> golang </a>
             </div>
-          <span class="more-meta"> 约 3613 字 </span>
+          <span class="more-meta"> 约 3608 字 </span>
           <span class="more-meta"> 预计阅读 8 分钟 </span>
         <span id="busuanzi_container_page_pv" class="more-meta"> <span id="busuanzi_value_page_pv"><img src="/img/spinner.svg" alt="spinner.svg"/></span> 次阅读 </span>
       </div>
@@ -710,14 +710,20 @@ func (m *Mutex) Unlock() {
 </div>
 <h3 id="总结">总结</h3>
 
-<p>对于 Lock 操作：
-* Mutex 使用 CAS 对信号量的进行修改
-* 使用 自旋 1 ns 避免频繁切换协程状态
-* 1.9 加入 starving 状态，保证了竞态的公平性。</p>
+<p>对于 Lock 操作：</p>
 
-<p>对于 Unlock 操作：
-* Mutex 的上锁没有绑定 gorouting 对象，使得会发生其他协程可以 Unlock 当前的锁状态
-* 使用信号量唤醒阻塞的 goroutine 去获得锁</p>
+<ul>
+<li>Mutex 使用 CAS 对信号量的进行修改</li>
+<li>使用 自旋 1 ns 避免频繁切换协程状态</li>
+<li>1.9 加入 starving 状态，保证了竞态的公平性。</li>
+</ul>
+
+<p>对于 Unlock 操作：</p>
+
+<ul>
+<li>Mutex 的上锁没有绑定 gorouting 对象，使得会发生其他协程可以 Unlock 当前的锁状态</li>
+<li>使用信号量唤醒阻塞的 goroutine 去获得锁</li>
+</ul>
 
 <p>如看完笔者粗略的注释看完后不是特别理解，建议可以查看 Mutex 源码注释，以及参考链接。</p>
 
