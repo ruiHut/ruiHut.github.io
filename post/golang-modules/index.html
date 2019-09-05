@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <title>Golang Modules 的前世今生 - ZhouWang`s Blogs Space</title>
+  <meta name="renderer" content="webkit" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+<meta name="theme-color" content="#f8f5ec" />
+<meta name="msapplication-navbutton-color" content="#f8f5ec">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="#f8f5ec">
+
+
+<meta name="author" content="ZhouWang" /><meta name="description" content="序 $GOPATH/go.mod exists but should not 在学习 golang 之初，便对 golang 的包管理一直一知半解(尤其是一上来就是要了解 gopath、goroot)。本文就 1.11 新特性 Modules 的前世今生，对 golang 的" /><meta name="keywords" content="ZhouWang blog, Github, Golang, Java, blog" />
+
+
+
+
+
+
+<meta name="generator" content="Hugo 0.54.0 with even 4.0.0" />
+
+
+<link rel="canonical" href="http://ruihut.github.io/post/golang-modules/" />
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+<link rel="manifest" href="/manifest.json">
+<link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
+
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+<link href="/dist/even.c2a46f00.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.1.20/dist/jquery.fancybox.min.css" integrity="sha256-7TyXnr2YU040zfSP+rEcz29ggW4j56/ujTPwjMzyqFY=" crossorigin="anonymous">
+
+
+<meta property="og:title" content="Golang Modules 的前世今生" />
+<meta property="og:description" content="序 $GOPATH/go.mod exists but should not 在学习 golang 之初，便对 golang 的包管理一直一知半解(尤其是一上来就是要了解 gopath、goroot)。本文就 1.11 新特性 Modules 的前世今生，对 golang 的" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://ruihut.github.io/post/golang-modules/" />
+<meta property="article:published_time" content="2019-08-30T15:23:26&#43;08:00"/>
+<meta property="article:modified_time" content="2019-08-30T15:23:26&#43;08:00"/>
+
+<meta itemprop="name" content="Golang Modules 的前世今生">
+<meta itemprop="description" content="序 $GOPATH/go.mod exists but should not 在学习 golang 之初，便对 golang 的包管理一直一知半解(尤其是一上来就是要了解 gopath、goroot)。本文就 1.11 新特性 Modules 的前世今生，对 golang 的">
+
+
+<meta itemprop="datePublished" content="2019-08-30T15:23:26&#43;08:00" />
+<meta itemprop="dateModified" content="2019-08-30T15:23:26&#43;08:00" />
+<meta itemprop="wordCount" content="2767">
+
+
+
+<meta itemprop="keywords" content="golang," />
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="Golang Modules 的前世今生"/>
+<meta name="twitter:description" content="序 $GOPATH/go.mod exists but should not 在学习 golang 之初，便对 golang 的包管理一直一知半解(尤其是一上来就是要了解 gopath、goroot)。本文就 1.11 新特性 Modules 的前世今生，对 golang 的"/>
+
+<!--[if lte IE 9]>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/classlist/1.1.20170427/classList.min.js"></script>
+<![endif]-->
+
+<!--[if lt IE 9]>
+  <script src="https://cdn.jsdelivr.net/npm/html5shiv@3.7.3/dist/html5shiv.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/respond.js@1.4.2/dest/respond.min.js"></script>
+<![endif]-->
+
+</head>
+<body>
+  <div id="mobile-navbar" class="mobile-navbar">
+  <div class="mobile-header-logo">
+    <a href="/" class="logo">Mock Space</a>
+  </div>
+  <div class="mobile-navbar-icon">
+    <span></span>
+    <span></span>
+    <span></span>
+  </div>
+</div>
+<nav id="mobile-menu" class="mobile-menu slideout-menu">
+  <ul class="mobile-menu-list">
+    <a href="/">
+        <li class="mobile-menu-item">首页</li>
+      </a><a href="/post/">
+        <li class="mobile-menu-item">归档</li>
+      </a><a href="/tags/">
+        <li class="mobile-menu-item">标签</li>
+      </a><a href="/categories/">
+        <li class="mobile-menu-item">分类</li>
+      </a>
+  </ul>
+</nav>
+  <div class="container" id="mobile-panel">
+    <header id="header" class="header">
+        <div class="logo-wrapper">
+  <a href="/" class="logo">Mock Space</a>
+</div>
+
+<nav class="site-navbar">
+  <ul id="menu" class="menu">
+    <li class="menu-item">
+        <a class="menu-item-link" href="/">首页</a>
+      </li><li class="menu-item">
+        <a class="menu-item-link" href="/post/">归档</a>
+      </li><li class="menu-item">
+        <a class="menu-item-link" href="/tags/">标签</a>
+      </li><li class="menu-item">
+        <a class="menu-item-link" href="/categories/">分类</a>
+      </li>
+  </ul>
+</nav>
+    </header>
+
+    <main id="main" class="main">
+      <div class="content-wrapper">
+        <div id="content" class="content">
+          <article class="post">
+    
+    <header class="post-header">
+      <h1 class="post-title">Golang Modules 的前世今生</h1>
+
+      <div class="post-meta">
+        <span class="post-time"> 2019-08-30 15:23 </span>
+        <div class="post-category">
+            <a href="/categories/golang/"> golang </a>
+            </div>
+          <span class="more-meta"> 约 2767 字 </span>
+          <span class="more-meta"> 预计阅读 6 分钟 </span>
+        <span id="busuanzi_container_page_pv" class="more-meta"> <span id="busuanzi_value_page_pv"><img src="/img/spinner.svg" alt="spinner.svg"/></span> 次阅读 </span>
+      </div>
+    </header>
+
+    <div class="post-toc" id="post-toc">
+  <h2 class="post-toc-title">文章目录</h2>
+  <div class="post-toc-content">
+    <nav id="TableOfContents">
+<ul>
+<li>
+<ul>
+<li><a href="#序">序</a></li>
+<li><a href="#包管理-package-manager-是什么">包管理（Package manager）是什么 ？</a>
+<ul>
+<li><a href="#那么在包管理器出现之前在操作系统上是如何安装软件的呢-https-zhuanlan-zhihu-com-p-42402896"><a href="https://zhuanlan.zhihu.com/p/42402896">那么在包管理器出现之前在操作系统上是如何安装软件的呢？</a></a></li>
+</ul></li>
+<li><a href="#golang-的包管理">Golang 的包管理</a>
+<ul>
+<li><a href="#goroot-gopath">GOROOT, GOPATH</a></li>
+<li><a href="#社区包管理工具">社区包管理工具</a></li>
+<li><a href="#vendor">Vendor</a></li>
+<li><a href="#golang-modules">Golang modules</a></li>
+</ul></li>
+<li><a href="#参考">参考</a></li>
+</ul></li>
+</ul>
+</nav>
+  </div>
+</div>
+    <div class="post-content">
+      <h2 id="序">序</h2>
+
+<blockquote>
+<p>$GOPATH/go.mod exists but should not</p>
+</blockquote>
+
+<p><img src="/images/modules.jpg" alt="Modules" /></p>
+
+<p>在学习 golang 之初，便对 golang 的包管理一直一知半解(尤其是一上来就是要了解 gopath、goroot)。本文就 1.11 新特性 Modules 的前世今生，对 golang 的包管理做一次系统学习。</p>
+
+<h2 id="包管理-package-manager-是什么">包管理（Package manager）是什么 ？</h2>
+
+<p>一聊到包管理，我们可能会想到:
+* 操作系统中的： yum, api-get, brew ...
+<br>
+* 以及：npm (node package manager) , app-store ...
+<br></p>
+
+<p><a href="https://en.wikipedia.org/wiki/Package_manager">Wiki</a></p>
+
+<blockquote>
+<p>A package manager or package-management system is a collection of software tools that automates the process of installing, upgrading, configuring, and removing computer programs for a computer's operating system in a consistent manner</p>
+</blockquote>
+
+<p>简单而言：可以通过包管理对程序包（微信、支付宝）进行<strong>下载、更新、删除管理的一个系统</strong>(类比于我们平时手机上的应用商店 app store，只是对于包管理的操作进行了<strong>图形化界面的封装</strong>)</p>
+
+<h3 id="那么在包管理器出现之前在操作系统上是如何安装软件的呢-https-zhuanlan-zhihu-com-p-42402896"><a href="https://zhuanlan.zhihu.com/p/42402896">那么在包管理器出现之前在操作系统上是如何安装软件的呢？</a></h3>
+
+<p>摘抄一部分说明：</p>
+
+<blockquote>
+<p>曾几何时，软件都是通过 FTP 或邮件列表（LCTT 译注：即通过邮件列表发布源代码的补丁包）来分发的（最终这些发布方式在互联网的迅猛发展下都演化成为一个个现今常见的软件发布网站）。（一般在一个 tar 文件中）只有一个非常小的文件包含了创建二进制的说明。你需要做的是先解压这个包，然后仔细阅读当中的 README 文件， 如果你的系统上恰好有 GCC（LCTT 译注：GNU C Compiler）或者其它厂商的 C 编译器的话，你得首先运行 ./configure 脚本，并在脚本后添加相应的参数，如库函数的路径、创建可执行文件的路径等等。除此之外，这个配置过程也会检查你操作系统上的软件依赖是否满足安装要求。如果缺失了任何主要的依赖，该配置脚本会退出不再继续安装，直到你满足了该依赖。如果该配置脚本正常执行完毕，将会创建一个 Makefile 文件。</p>
+
+<p>当有了一个 Makefile 文件时， 你就可以接下去执行 make 命令（该命令由你所使用的编译器提供）。make 命令也有很多参数，被称为 make 标识(flag)，这些标识能为你的系统优化最终生成出来的二进制可执行文件。在计算机世界的早期，这些优化是非常重要的，因为彼时的计算机硬件正在为了跟上软件迅速的发展而疲于奔命。今日今时，编译标识变得更加通用而不是为了优化哪些具体的硬件型号，这得益于现代硬件和现代软件相比已经变得成本低廉，唾手可得。</p>
+
+<p>最后，在 make 完成之后， 你需要运行 make install （或 sudo make install）（LCTT 译注：依赖于你的用户权限） 来“真正”将这个软件安装到你的系统上。可以想象，为你系统上的每一个软件都执行上述的流程将是多么无聊费时，更不用说如果更新一个已经安装的软件将会多复杂，多么需要精力投入。（LCTT 译注：上述流程也称 CMMI 安装， 即Configure、Make、Make Install）</p>
+</blockquote>
+
+<p>笔者没有经历过那个年代，可想而知如果没有包管理，想要对自己的软件进行下载安装是一件多么 ** 的事情。</p>
+
+<h2 id="golang-的包管理">Golang 的包管理</h2>
+
+<p>golang 的初体验是给我一种配置劝退的感觉，上手 fork 一个项目。不像 Java 中 maven install，对于 golang 需要先了解 GOPATH。当初实习的时候，也是照着配置 GOPATH，直到前段时间面试被问到 GOPATH，GOROOT， VENDOR 的区别竟哑口无言。也是一个契机，就着包管理这个话题，理解其中的联系。</p>
+
+<h3 id="goroot-gopath">GOROOT, GOPATH</h3>
+
+<ul>
+<li><p>GOROOT</p>
+
+<blockquote>
+<p>This is the location of your Go installation. It is used to find the standard libraries.</p>
+</blockquote>
+
+<p>GOROOT 很好理解，它是 Go 语言包安装的位置, 用于查找标准库。开发中用于设置项目的 SDK。
+<br>
+在 Windows 中，GOROOT 的默认值是 C:/go，而在 Mac OS 或 Linux 中 GOROOT 的默认值是 usr/loca/go，如果将 Go 安装在其他目录中，而需要将 GOROOT 的值修改为对应的目录。
+<br>
+另外，<strong>GOROOT/bin</strong>则包含 Go 为我们提供的工具链，因此，应该将 GOROOT/bin 配置到环境变量 PATH 中，方便我们在全局中使用 Go 工具链。</p>
+
+<p><img src="/images/goroot.PNG" alt="goroot" />
+<img src="/images/gobin.PNG" alt="gobin" /></p></li>
+
+<li><p>GOPATH
+&gt; If you come from other programming languages you’re probably used to placing source code anywhere in the file system.</p>
+
+<blockquote>
+<p>Go tools expect a certain layout of the source code.</p>
+</blockquote>
+
+<p>GOPATH 是工作区的根目录，包含以下几个文件夹</p>
+
+<ul>
+<li>src - 源文件的存放地址 （location of source files: .go, .c, .g, .s ）</li>
+<li>pkg - 编译好的包的位置  (location of compiled packages (.a files))</li>
+<li>bin - 可执行二进制文件的位置 （location of executables built by Go）</li>
+</ul>
+
+<p>GOPATH 可以存在多个用 ';' 隔开。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span></pre></td>
+<td class="lntd">
+<pre class="chroma">import (
+&#34;app/config&#34;
+ 
+&#34;google.golang.org/grpc&#34;
+)</pre></td></tr></table>
+</div>
+</div>
+<p>例如： GO 会去 GOPATH/src 下寻找 import(不需要写全路径，而对于GOPATH中的包而) 的包, 那么当我们引入本项目内自定义的 &quot;app/config&quot; 包时，意味着我们自己编写的项目必须设置为 GOPATH/src 目录下。 其本质是一个<strong>存放代码依赖的地方</strong>，所以当我们 go get 下载依赖时会<strong>默认下载到第一个 GOPATH/src 目录</strong>下。</p>
+
+<p><img src="/images/gopath.1.PNG" alt="gopath.1" />
+<img src="/images/gopath.2.PNG" alt="gopath.2" />
+<img src="/images/gopath.3.PNG" alt="gopath.3" />
+<br></p>
+
+<p>多个 GOPATH： GOPATH允许多个目录，当有多个目录时，请注意分隔符，多个目录的时候Windows是分号，Linux系统是冒号，当存在多个值时，Go 程序会依次去寻找有没有对应的依赖包。
+<br>
+区别</p></li>
+
+<li><p>GOROOT: 作为安装包目录，需要额外配置环境变量以使用 golang 自带的可执行文件。</p></li>
+
+<li><p>GOPATH: 作为 golang 的工作区，<strong>除 GOROOT 以外的所有代码都存 GOPATH 中</strong>（包括自己项目的代码，和依赖的第三方包），go get</p></li>
+</ul>
+
+<p>使用 <strong>go env</strong> 查看当前配置</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span></pre></td>
+<td class="lntd">
+<pre class="chroma">$ go env
+set GOBIN= 
+set GOROOT=C:\Go\bin
+set GOPATH=C:\Users\**</pre></td></tr></table>
+</div>
+</div>
+<p><strong>Q&amp;A</strong></p>
+
+<p>为什么需要 GOROOT 与 GOPATH ?
+&gt; 两个目录对于我们开发实质都是提供依赖，而 GOROOT 提供<strong>语言级</strong>的（SDK 源码， go commend），GOPATH 提供除语言级以外的依赖（自身项目包、第三方引用包）</p>
+
+<p>那么在只要 GOROOT 和 GOPATH 下如何对每个项目做到包管理？
+&gt; 简而言之就是每一项目做一个 GOPATH, 但这样有一个很大的缺点就是，对于每一个项目而言： 很多第三方包引用，包括公司内部公共库引用都是相同。而一旦需要对其进行升级、删除等操作，就牵扯到每一个项目需要手动更新。 因为其公共模块不能共享。</p>
+
+<p>那么将公共模块抽出作为一个单独的 GOPATH 呢？
+&gt; 这样确实是能解决公共包共享，但是对于其公共部分的版本升级，就不允许每个项目实现<strong>依赖版本私有化</strong> (例如 A、B 项目同时需要 ORM 模块，但是 A 版本只希望版本为 1.0 ，而 B 希望版本为 2.0).</p>
+
+<h3 id="社区包管理工具">社区包管理工具</h3>
+
+<p>终于，在 Golang 官方面对 GOPATH 管理的各种乱象始终无动于衷的时候，社区看不下去了，相继出现各类包管理工具。
+例如 Godep, glide .... 很大程度上解决了依赖问题但是都有各自的问题存在。</p>
+
+<h3 id="vendor">Vendor</h3>
+
+<p>时间走到了 2015 年，Golang 官方终于看不下去了，在推出 go1.5 版本的同时，首次实验性质的加入了 vendor 机制 功能。当然，这个功能毕竟是实验性质的，默认情况下是关闭的，导致大多数用户实际上根本不会用它。直到 2016 年，在官方推出 go1.6 版本的时候，vendor 机制 才默认变成开启的状态。</p>
+
+<p><br>
+那么到底什么是 vendor 机制 呢？ 通俗的说，就是在你的项目中包含了一个 vendor 文件夹，go 语言会把它默认为一个 GOPATH。于是，你就可以在里面放你的依赖库啦。</p>
+
+<p>其基本思路是，将引用的外部包的源代码放在当前工程的vendor目录下面，go 1.6以后编译go代码会优先从vendor目录先寻找依赖包，其在执行 go build 或 go run 时，会按照以下顺序去查找包</p>
+
+<ul>
+<li>当前包下的 vendor 目录</li>
+<li>向上级目录查找，直到找到 src 下的 vendor 目录</li>
+<li>在 GOROOT 目录下查找</li>
+<li>在 GOPATH 下面查找依赖包</li>
+</ul>
+
+<p>但仍然存在许多问题</p>
+
+<ol>
+<li>嵌套的 vendor 目录问题：vendor 目录下面的项目里面的 vendor 目录怎么办？</li>
+<li>vendor 机制本身没有版本概念，不同版本间类型不兼容问题依旧存在。</li>
+<li>与其他 GOPATH 下的包 init 函数冲突问题：出现了相同的包，重复的 init() 函数又怎么办？</li>
+</ol>
+
+<p>随后又产生了更多的管理工具 <a href="https://github.com/golang/go/wiki/PackageManagementTools">详细</a>, 其中也出现了大多数使用的 Govendor 工具</p>
+
+<h3 id="golang-modules">Golang modules</h3>
+
+<h2 id="参考">参考</h2>
+
+<ul>
+<li><a href="https://zhuanlan.zhihu.com/p/42402896">包管理器的进化</a></li>
+<li><a href="https://www.programming-books.io/essential/go/gopath-goroot-gobin-d6da4b8481f94757bae43be1fdfa9e73">GOROOT, GOPATH, GOBIN</a></li>
+<li><a href="https://juejin.im/post/5cac9b73e51d456e8c1d3bfc#heading-3">Golang环境变量设置详解</a></li>
+</ul>
+    </div>
+
+    
+<footer class="post-footer">
+      <div class="post-tags">
+          <a href="/tags/golang/">golang</a>
+          </div>
+      <nav class="post-nav">
+        <a class="prev" href="/post/golang-map/">
+            <i class="iconfont icon-left"></i>
+            <span class="prev-text nav-default">Golang Map 入门到实现</span>
+            <span class="prev-text nav-mobile">上一篇</span>
+          </a>
+        <a class="next" href="/post/gRpc-%E5%AE%9E%E8%B7%B5%E5%88%B0%E5%8E%9F%E7%90%86/">
+            <span class="next-text nav-default">gRpc 实践到原理</span>
+            <span class="next-text nav-mobile">下一篇</span>
+            <i class="iconfont icon-right"></i>
+          </a>
+      </nav>
+    </footer>
+  </article>
+        </div>
+        
+  
+  
+
+  
+    <script src="https://utteranc.es/client.js"
+            repo="ruiHut/ruihut.github.io"
+            issue-term="pathname"
+            theme="github-light"
+            crossorigin="anonymous"
+            async>
+    </script>
+    <noscript>Please enable JavaScript to view the <a href="https://github.com/utterance">comments powered by utterances.</a></noscript>
+
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="social-links">
+      <a href="15197162859@163.com" class="iconfont icon-email" title="email"></a>
+      <a href="https://github.com/ruiHut" class="iconfont icon-github" title="github"></a>
+  <a href="http://ruihut.github.io/index.xml" type="application/rss+xml" class="iconfont icon-rss" title="rss"></a>
+</div>
+
+<div class="copyright">
+  <span class="copyright-year">
+    <span class="heart">
+      <i class="iconfont icon-heart"></i>
+    </span>
+    <span class="author">ZhouWang</span>
+  </span>
+</div>
+    </footer>
+
+    <div class="back-to-top" id="back-to-top">
+      <i class="iconfont icon-up"></i>
+    </div>
+  </div>
+  <script src="/lib/highlight/highlight.pack.js?v=20171001"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jquery@3.2.1/dist/jquery.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/slideout@1.0.1/dist/slideout.min.js" integrity="sha256-t+zJ/g8/KXIJMjSVQdnibt4dlaDxc9zXr/9oNPeWqdg=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.1.20/dist/jquery.fancybox.min.js" integrity="sha256-XVLffZaxoWfGUEbdzuLi7pwaUJv1cecsQJQqGLe7axY=" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/timeago.js@3.0.2/dist/timeago.min.js" integrity="sha256-jwCP0NAdCBloaIWTWHmW4i3snUNMHUNO+jr9rYd2iOI=" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/timeago.js@3.0.2/dist/timeago.locales.min.js" integrity="sha256-ZwofwC1Lf/faQCzN7nZtfijVV6hSwxjQMwXL4gn9qU8=" crossorigin="anonymous"></script>
+  <script><!-- NOTE: timeago.js uses the language code format like "zh_CN" (underscore and case sensitive) -->
+    var languageCode = "zh-cn".replace(/-/g, '_').replace(/_(.*)/, function ($0, $1) {return $0.replace($1, $1.toUpperCase());});
+    timeago().render(document.querySelectorAll('.timeago'), languageCode);
+    timeago.cancel();  
+  </script>
+<script type="text/javascript" src="/dist/even.26188efa.min.js"></script>
+
+
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+	ga('create', 'UA-138883536-1', 'auto');
+	ga('set', 'anonymizeIp', true);
+	ga('send', 'pageview');
+}
+</script>
+<script async src='https://www.google-analytics.com/analytics.js'></script>
+
+
+
+
+
+
+
+</body>
+</html>

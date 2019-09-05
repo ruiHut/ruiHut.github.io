@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <title>Golang Map 入门到实现 - ZhouWang`s Blogs Space</title>
+  <meta name="renderer" content="webkit" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+<meta name="theme-color" content="#f8f5ec" />
+<meta name="msapplication-navbutton-color" content="#f8f5ec">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="#f8f5ec">
+
+
+<meta name="author" content="ZhouWang" /><meta name="description" content="哈希表是一种巧妙并且实用的数据结构。它是一个无序的key/value对的集合，其中所有的key都是不同的，然后通过给定的key可以在常数时间" /><meta name="keywords" content="ZhouWang blog, Github, Golang, Java, blog" />
+
+
+
+
+
+
+<meta name="generator" content="Hugo 0.54.0 with even 4.0.0" />
+
+
+<link rel="canonical" href="http://ruihut.github.io/post/golang-map/" />
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+<link rel="manifest" href="/manifest.json">
+<link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
+
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+<link href="/dist/even.c2a46f00.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.1.20/dist/jquery.fancybox.min.css" integrity="sha256-7TyXnr2YU040zfSP+rEcz29ggW4j56/ujTPwjMzyqFY=" crossorigin="anonymous">
+
+
+<meta property="og:title" content="Golang Map 入门到实现" />
+<meta property="og:description" content="哈希表是一种巧妙并且实用的数据结构。它是一个无序的key/value对的集合，其中所有的key都是不同的，然后通过给定的key可以在常数时间" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://ruihut.github.io/post/golang-map/" />
+<meta property="article:published_time" content="2019-09-04T14:44:45&#43;08:00"/>
+<meta property="article:modified_time" content="2019-09-04T14:44:45&#43;08:00"/>
+
+<meta itemprop="name" content="Golang Map 入门到实现">
+<meta itemprop="description" content="哈希表是一种巧妙并且实用的数据结构。它是一个无序的key/value对的集合，其中所有的key都是不同的，然后通过给定的key可以在常数时间">
+
+
+<meta itemprop="datePublished" content="2019-09-04T14:44:45&#43;08:00" />
+<meta itemprop="dateModified" content="2019-09-04T14:44:45&#43;08:00" />
+<meta itemprop="wordCount" content="2105">
+
+
+
+<meta itemprop="keywords" content="golang," />
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="Golang Map 入门到实现"/>
+<meta name="twitter:description" content="哈希表是一种巧妙并且实用的数据结构。它是一个无序的key/value对的集合，其中所有的key都是不同的，然后通过给定的key可以在常数时间"/>
+
+<!--[if lte IE 9]>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/classlist/1.1.20170427/classList.min.js"></script>
+<![endif]-->
+
+<!--[if lt IE 9]>
+  <script src="https://cdn.jsdelivr.net/npm/html5shiv@3.7.3/dist/html5shiv.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/respond.js@1.4.2/dest/respond.min.js"></script>
+<![endif]-->
+
+</head>
+<body>
+  <div id="mobile-navbar" class="mobile-navbar">
+  <div class="mobile-header-logo">
+    <a href="/" class="logo">Mock Space</a>
+  </div>
+  <div class="mobile-navbar-icon">
+    <span></span>
+    <span></span>
+    <span></span>
+  </div>
+</div>
+<nav id="mobile-menu" class="mobile-menu slideout-menu">
+  <ul class="mobile-menu-list">
+    <a href="/">
+        <li class="mobile-menu-item">首页</li>
+      </a><a href="/post/">
+        <li class="mobile-menu-item">归档</li>
+      </a><a href="/tags/">
+        <li class="mobile-menu-item">标签</li>
+      </a><a href="/categories/">
+        <li class="mobile-menu-item">分类</li>
+      </a>
+  </ul>
+</nav>
+  <div class="container" id="mobile-panel">
+    <header id="header" class="header">
+        <div class="logo-wrapper">
+  <a href="/" class="logo">Mock Space</a>
+</div>
+
+<nav class="site-navbar">
+  <ul id="menu" class="menu">
+    <li class="menu-item">
+        <a class="menu-item-link" href="/">首页</a>
+      </li><li class="menu-item">
+        <a class="menu-item-link" href="/post/">归档</a>
+      </li><li class="menu-item">
+        <a class="menu-item-link" href="/tags/">标签</a>
+      </li><li class="menu-item">
+        <a class="menu-item-link" href="/categories/">分类</a>
+      </li>
+  </ul>
+</nav>
+    </header>
+
+    <main id="main" class="main">
+      <div class="content-wrapper">
+        <div id="content" class="content">
+          <article class="post">
+    
+    <header class="post-header">
+      <h1 class="post-title">Golang Map 入门到实现</h1>
+
+      <div class="post-meta">
+        <span class="post-time"> 2019-09-04 14:44 </span>
+        <div class="post-category">
+            <a href="/categories/golang/"> golang </a>
+            </div>
+          <span class="more-meta"> 约 2105 字 </span>
+          <span class="more-meta"> 预计阅读 5 分钟 </span>
+        <span id="busuanzi_container_page_pv" class="more-meta"> <span id="busuanzi_value_page_pv"><img src="/img/spinner.svg" alt="spinner.svg"/></span> 次阅读 </span>
+      </div>
+    </header>
+
+    <div class="post-toc" id="post-toc">
+  <h2 class="post-toc-title">文章目录</h2>
+  <div class="post-toc-content">
+    <nav id="TableOfContents">
+<ul>
+<li>
+<ul>
+<li><a href="#map-的基本操作">Map 的基本操作</a>
+<ul>
+<li><a href="#创建一个-map">创建一个 Map</a></li>
+<li><a href="#增删改查">增删改查</a>
+<ul>
+<li><a href="#map-的顺序性">map 的顺序性</a></li>
+<li><a href="#利用-map-实现一个-set-集合">利用 Map 实现一个 Set 集合</a></li>
+<li><a href="#容器和结构体-map-and-struct">容器和结构体（map and struct）</a></li>
+</ul></li>
+</ul></li>
+<li><a href="#map-的实现-源码解析">Map 的实现（源码解析）</a>
+<ul>
+<li><a href="#map基本数据结构">map基本数据结构</a></li>
+<li><a href="#访问">访问</a></li>
+<li><a href="#写入">写入</a></li>
+<li><a href="#扩容">扩容</a></li>
+</ul></li>
+</ul></li>
+</ul>
+</nav>
+  </div>
+</div>
+    <div class="post-content">
+      <p>哈希表是一种巧妙并且实用的数据结构。它是一个无序的key/value对的集合，其中所有的key都是不同的，然后通过给定的key可以在常数时间复杂度内检索、更新或删除对应的value。
+<br>
+在Go语言中，一个map就是一个哈希表的引用，map类型可以写为map[K]V，其中K和V分别对应key和value。map中所有的key都有相同的类型，所有的value也有着相同的类型，但是key和value之间可以是不同的数据类型。其中K对应的key必须是支持==比较运算符的数据类型，所以map可以通过测试key是否相等来判断是否已经存在。虽然浮点数类型也是支持相等运算符比较的，但是将浮点数用做key类型则是一个坏的想法.
+<br></p>
+
+<h2 id="map-的基本操作">Map 的基本操作</h2>
+
+<h3 id="创建一个-map">创建一个 Map</h3>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span></pre></td>
+<td class="lntd">
+<pre class="chroma">    type User struct{
+        id      int
+        age     int
+    }
+    // 短声明 + make 
+    userMap := make(map[string]User, cap) 
+
+    // 短声明 + 初始化
+    userMap := map[string]{
+        Bob: User{
+            id, 1
+            age, 21
+        },
+        Lee: User{
+            id, 2
+            age, 22
+        }
+    }</pre></td></tr></table>
+</div>
+</div>
+<h3 id="增删改查">增删改查</h3>
+
+<p>通过 key 查找对应 value
+&gt; user : = userMap[&quot;Bob&quot;]   // user{id: 1, age: 22}</p>
+
+<p>遍历所有 key/value</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span></pre></td>
+<td class="lntd">
+<pre class="chroma">    for name, user := range userMap {
+        fmt.Printf(&#34;%s\t%s\n&#34;, name, user)
+    }</pre></td></tr></table>
+</div>
+</div>
+<h4 id="map-的顺序性">map 的顺序性</h4>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span></pre></td>
+<td class="lntd">
+<pre class="chroma">import &#34;sort&#34;
+
+var names []string
+for name := range ages {
+    names = append(names, name)
+}
+sort.Strings(names) // 显示排序
+for _, name := range names {
+    fmt.Printf(&#34;%s\t%d\n&#34;, name, ages[name])
+}</pre></td></tr></table>
+</div>
+</div>
+<p>内置的 delete 函数删除元素
+&gt; delete(usermMap, &quot;Bob&quot;)</p>
+
+<p>所有这些操作是安全的，即使这些元素不在map中也没有关系；如果一个查找失败将返回value类型对应的零值，例如，即使map中不存在“bob”下面的代码也可以正常工作，因为 userMap[&quot;bob&quot;]失败时将返回 nil。</p>
+
+<p><br>
+修改 （赋值）
+&gt; userMap[&quot;Bob&quot;] = User{
+    id: 1,
+    age: 22,
+}</p>
+
+<h4 id="利用-map-实现一个-set-集合">利用 Map 实现一个 Set 集合</h4>
+
+<p>Go语言中并没有提供一个 set 类型，但是 map 中的 key 也是不相同的，可以用 map 实现类似 set 的功能
+&gt; userSet := map[User]bool</p>
+
+<h4 id="容器和结构体-map-and-struct">容器和结构体（map and struct）</h4>
+
+<blockquote>
+<p>语法比较：
+    map[type]struct
+    map[type]*struct</p>
+</blockquote>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span></pre></td>
+<td class="lntd">
+<pre class="chroma"><span class="kn">package</span> <span class="nx">main</span>
+
+<span class="kn">import</span> <span class="s">&#34;fmt&#34;</span>
+
+<span class="kd">func</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
+	<span class="kd">type</span> <span class="nx">user</span> <span class="kd">struct</span><span class="p">{</span> <span class="nx">name</span> <span class="kt">string</span> <span class="p">}</span>
+	<span class="cm">/*
+</span><span class="cm">	   当 map 因扩张而重新哈希时，各键值项存储位置都会发生改变。
+</span><span class="cm">	   因此，map 被设计成 not addressable。
+</span><span class="cm">	   类似 m[1].name 这种期望透过原 value 指针修改成员的行为自然会被禁 。
+</span><span class="cm">	*/</span>
+	<span class="nx">m</span> <span class="o">:=</span> <span class="kd">map</span><span class="p">[</span><span class="kt">int</span><span class="p">]</span><span class="nx">user</span><span class="p">{</span> <span class="c1">//
+</span><span class="c1"></span>
+		<span class="mi">1</span><span class="p">:</span> <span class="p">{</span><span class="s">&#34;user1&#34;</span><span class="p">},</span>
+	<span class="p">}</span>
+	<span class="c1">// m[1].name = &#34;Tom&#34;
+</span><span class="c1"></span>	<span class="c1">// ./main.go:16:12: cannot assign to struct field m[1].name in map
+</span><span class="c1"></span>	<span class="nx">fmt</span><span class="p">.</span><span class="nf">Println</span><span class="p">(</span><span class="nx">m</span><span class="p">)</span>
+
+	<span class="c1">// 正确做法是完整替换 value 或使用指针。
+</span><span class="c1"></span>	<span class="nx">u</span> <span class="o">:=</span> <span class="nx">m</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+	<span class="nx">u</span><span class="p">.</span><span class="nx">name</span> <span class="p">=</span> <span class="s">&#34;Tom&#34;</span>
+	<span class="nx">m</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="p">=</span> <span class="nx">u</span> <span class="c1">// 替换 value。
+</span><span class="c1"></span>
+	<span class="nx">m2</span> <span class="o">:=</span> <span class="kd">map</span><span class="p">[</span><span class="kt">int</span><span class="p">]</span><span class="o">*</span><span class="nx">user</span><span class="p">{</span>
+		<span class="mi">1</span><span class="p">:</span> <span class="o">&amp;</span><span class="nx">user</span><span class="p">{</span><span class="s">&#34;user1&#34;</span><span class="p">},</span>
+	<span class="p">}</span>
+
+	<span class="nx">m2</span><span class="p">[</span><span class="mi">1</span><span class="p">].</span><span class="nx">name</span> <span class="p">=</span> <span class="s">&#34;Jack&#34;</span> <span class="c1">// 返回的是指针复制品。透过指针修改原对象是允许的。
+</span><span class="c1"></span>	<span class="nx">fmt</span><span class="p">.</span><span class="nf">Println</span><span class="p">(</span><span class="nx">m2</span><span class="p">)</span>
+    
+    <span class="nx">结果</span><span class="err">：</span> 
+    <span class="kd">map</span><span class="p">[</span><span class="mi">1</span><span class="p">:{</span><span class="nx">user1</span><span class="p">}]</span>
+    <span class="kd">map</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="mh">0xc42000e1e0</span><span class="p">]</span>
+<span class="p">}</span></pre></td></tr></table>
+</div>
+</div>
+<h2 id="map-的实现-源码解析">Map 的实现（源码解析）</h2>
+
+<h3 id="map基本数据结构">map基本数据结构</h3>
+
+<p>map的底层结构是hmap（即hashmap的缩写），核心元素是一个由若干个桶（bucket，结构为bmap）组成的数组，每个bucket可以存放若干元素（通常是8个），key通过哈希算法被归入不同的bucket中。当超过8个元素需要存入某个bucket时，hmap会使用extra中的overflow来拓展该bucket。下面是hmap的结构体。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span></pre></td>
+<td class="lntd">
+<pre class="chroma">type hmap struct {
+	count     int // # 元素个数
+	flags     uint8
+	B         uint8  // 说明包含2^B个bucket
+	noverflow uint16 // 溢出的bucket的个数
+	hash0     uint32 // hash种子
+ 
+	buckets    unsafe.Pointer // buckets的数组指针
+	oldbuckets unsafe.Pointer // 结构扩容的时候用于复制的buckets数组
+	nevacuate  uintptr        // 搬迁进度（已经搬迁的buckets数量）
+ 
+	extra *mapextra
+}</pre></td></tr></table>
+</div>
+</div>
+<p>bmap 桶结构
+&gt; 哈希表的类型其实都存储在每一个桶中，这个桶的结构体 bmap 其实在 Go 语言源代码中的定义只包含一个简单的 tophash 字段：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span></pre></td>
+<td class="lntd">
+<pre class="chroma">// A bucket for a Go map.
+type bmap struct {
+	tophash [bucketCnt]uint8
+}</pre></td></tr></table>
+</div>
+</div>
+<p>哈希表中桶的真正结构其实是在编译期间运行的函数 bmap 中被『动态』创建的：
+&gt; 这种做法是因为 Go 语言在执行哈希的操作时会<strong>直接操作内存空间</strong>，与此同时<strong>由于键值类型的不同占用的空间大小也不同</strong>，也就导致了类型和占用的内存不确定，所以没有办法在 Go 语言的源代码中进行声明。重建之后</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span><span class="lnt">7
+</span></pre></td>
+<td class="lntd">
+<pre class="chroma">type bmap struct {
+    topbits  [8]uint8
+    keys     [8]keytype
+    values   [8]valuetype
+    pad      uintptr
+    overflow uintptr
+}</pre></td></tr></table>
+</div>
+</div>
+<p><img src="/images/golang-map3.png" alt="map" />
+每一个哈希表中的桶最多只能存储 8 个元素，如果桶中存储的元素超过 8 个，那么这个哈希表的执行效率一定会急剧下降，不过在实际使用中如果一个哈希表存储的数据逐渐增多，我们会对哈希表进行扩容或者使用额外的桶存储溢出的数据，不会让单个桶中的数据超过 8 个：
+&gt; 溢出桶只是临时的解决方案，创建过多的溢出桶最终也会导致哈希的扩容。</p>
+
+<p><img src="/images/golang-map.png" alt="map" />
+map doc  go 1.12 runtime/map.go</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span></pre></td>
+<td class="lntd">
+<pre class="chroma">// This file contains the implementation of Go&#39;s map type.
+//
+// A map is just a hash table. The data is arranged
+// into an array of buckets. Each bucket contains up to
+// 8 key/value pairs. The low-order bits of the hash are
+// used to select a bucket. Each bucket contains a few
+// high-order bits of each hash to distinguish the entries
+// within a single bucket.
+//
+// If more than 8 keys hash to a bucket, we chain on
+// extra buckets.
+//</pre></td></tr></table>
+</div>
+</div>
+<p><img src="/images/golang-map2.png" alt="image" /></p>
+
+<h3 id="访问">访问</h3>
+
+<blockquote>
+<p>在编译的 类型检查 阶段，所有的类似 hash[key] 的 OINDEX 操作都会被转换成 OINDEXMAP 操作，然后在 中间代码生成 之前会在 walkexpr 中将这些 OINDEXMAP 操作转换成如下的代码</p>
+</blockquote>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><span class="lnt">1
+</span><span class="lnt">2
+</span></pre></td>
+<td class="lntd">
+<pre class="chroma">v     := hash[key] // =&gt; v     := *mapaccess1(maptype, hash, &amp;key)
+v, ok := hash[key] // =&gt; v, ok := mapaccess2(maptype, hash, &amp;key)</pre></td></tr></table>
+</div>
+</div>
+<h3 id="写入">写入</h3>
+
+<p>当形如 hash[k] 的表达式出现在赋值符号左侧时，与读取时一样会在编译的 类型检查 和 中间代码生成 期间被转换成调用 mapassign 函数调用，我们可以将该函数分成几个部分介绍，首先是函数会根据传入的键拿到对应的哈希和桶：
+<br>
+当前的哈希表没有处于扩容状态并且装载因子已经超过了 6.5 或者存在了太多溢出的桶时，就会调用 hashGrow 对当前的哈希表进行扩容。
+&gt; 装载因子是同时由 loadFactorNum 和 loadFactDen 两个参数决定的，前者在 Go 源代码中的定义是 13 后者是 2，所以装载因子就是 6.5。</p>
+
+<p><img src="/images/golang-map4.png" alt="map3" /></p>
+
+<p>如果当前的桶已经满了，就会调用 newoverflow 创建一个新的桶或者使用 hmap 预先在 noverflow 中创建好的桶来保存数据，新创建桶的指针会被追加到已有桶中，与此同时，溢出桶的创建会增加哈希表的 noverflow 计数器。</p>
+
+<h3 id="扩容">扩容</h3>
+    </div>
+
+    
+<footer class="post-footer">
+      <div class="post-tags">
+          <a href="/tags/golang/">golang</a>
+          </div>
+      <nav class="post-nav">
+        <a class="prev" href="/post/%E6%B7%B1%E5%85%A5%E7%90%86%E8%A7%A3%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%B3%BB%E7%BB%9F-%E5%A4%A7%E7%AB%AF%E8%BF%98%E6%98%AF%E5%B0%8F%E7%AB%AF/">
+            <i class="iconfont icon-left"></i>
+            <span class="prev-text nav-default">深入理解计算机系统 大端还是小端？</span>
+            <span class="prev-text nav-mobile">上一篇</span>
+          </a>
+        <a class="next" href="/post/golang-modules/">
+            <span class="next-text nav-default">Golang Modules 的前世今生</span>
+            <span class="next-text nav-mobile">下一篇</span>
+            <i class="iconfont icon-right"></i>
+          </a>
+      </nav>
+    </footer>
+  </article>
+        </div>
+        
+  
+  
+
+  
+    <script src="https://utteranc.es/client.js"
+            repo="ruiHut/ruihut.github.io"
+            issue-term="pathname"
+            theme="github-light"
+            crossorigin="anonymous"
+            async>
+    </script>
+    <noscript>Please enable JavaScript to view the <a href="https://github.com/utterance">comments powered by utterances.</a></noscript>
+
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="social-links">
+      <a href="15197162859@163.com" class="iconfont icon-email" title="email"></a>
+      <a href="https://github.com/ruiHut" class="iconfont icon-github" title="github"></a>
+  <a href="http://ruihut.github.io/index.xml" type="application/rss+xml" class="iconfont icon-rss" title="rss"></a>
+</div>
+
+<div class="copyright">
+  <span class="copyright-year">
+    <span class="heart">
+      <i class="iconfont icon-heart"></i>
+    </span>
+    <span class="author">ZhouWang</span>
+  </span>
+</div>
+    </footer>
+
+    <div class="back-to-top" id="back-to-top">
+      <i class="iconfont icon-up"></i>
+    </div>
+  </div>
+  <script src="/lib/highlight/highlight.pack.js?v=20171001"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jquery@3.2.1/dist/jquery.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/slideout@1.0.1/dist/slideout.min.js" integrity="sha256-t+zJ/g8/KXIJMjSVQdnibt4dlaDxc9zXr/9oNPeWqdg=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.1.20/dist/jquery.fancybox.min.js" integrity="sha256-XVLffZaxoWfGUEbdzuLi7pwaUJv1cecsQJQqGLe7axY=" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/timeago.js@3.0.2/dist/timeago.min.js" integrity="sha256-jwCP0NAdCBloaIWTWHmW4i3snUNMHUNO+jr9rYd2iOI=" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/timeago.js@3.0.2/dist/timeago.locales.min.js" integrity="sha256-ZwofwC1Lf/faQCzN7nZtfijVV6hSwxjQMwXL4gn9qU8=" crossorigin="anonymous"></script>
+  <script><!-- NOTE: timeago.js uses the language code format like "zh_CN" (underscore and case sensitive) -->
+    var languageCode = "zh-cn".replace(/-/g, '_').replace(/_(.*)/, function ($0, $1) {return $0.replace($1, $1.toUpperCase());});
+    timeago().render(document.querySelectorAll('.timeago'), languageCode);
+    timeago.cancel();  
+  </script>
+<script type="text/javascript" src="/dist/even.26188efa.min.js"></script>
+
+
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+	ga('create', 'UA-138883536-1', 'auto');
+	ga('set', 'anonymizeIp', true);
+	ga('send', 'pageview');
+}
+</script>
+<script async src='https://www.google-analytics.com/analytics.js'></script>
+
+
+
+
+
+
+
+</body>
+</html>

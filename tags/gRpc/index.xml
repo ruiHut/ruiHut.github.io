@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>gRpc on ZhouWang`s Blogs Space</title>
+    <link>http://ruihut.github.io/tags/gRpc/</link>
+    <description>Recent content in gRpc on ZhouWang`s Blogs Space</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>zh-cn</language>
+    <lastBuildDate>Fri, 30 Aug 2019 10:08:26 +0800</lastBuildDate>
+    
+	<atom:link href="http://ruihut.github.io/tags/gRpc/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>gRpc 实践到原理</title>
+      <link>http://ruihut.github.io/post/gRpc-%E5%AE%9E%E8%B7%B5%E5%88%B0%E5%8E%9F%E7%90%86/</link>
+      <pubDate>Fri, 30 Aug 2019 10:08:26 +0800</pubDate>
+      
+      <guid>http://ruihut.github.io/post/gRpc-%E5%AE%9E%E8%B7%B5%E5%88%B0%E5%8E%9F%E7%90%86/</guid>
+      <description>简述 gRpc gRpc 是什么? 官网简介 &amp;gt;gRPC is a modern open source high performance RPC framework that can run in any environment. It can efficiently connect services in and across data centers with pluggable support for load balancing, tracing, health checking and authentication. It is also applicable in last mile of distributed computing to connect devices, mobile applications and browsers to backend services. Wiki</description>
+    </item>
+    
+  </channel>
+</rss>

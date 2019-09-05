@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <title>深入理解计算机系统 大端还是小端？ - ZhouWang`s Blogs Space</title>
+  <meta name="renderer" content="webkit" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+<meta name="theme-color" content="#f8f5ec" />
+<meta name="msapplication-navbutton-color" content="#f8f5ec">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="#f8f5ec">
+
+
+<meta name="author" content="ZhouWang" /><meta name="description" content="字节顺序（Endianness） wiki 在计算机科学领域中，指存储器中或在数字通信链路中，组成多字节的字(例如 int32 四字节，short 两字节)的字节的" /><meta name="keywords" content="ZhouWang blog, Github, Golang, Java, blog" />
+
+
+
+
+
+
+<meta name="generator" content="Hugo 0.54.0 with even 4.0.0" />
+
+
+<link rel="canonical" href="http://ruihut.github.io/post/%E6%B7%B1%E5%85%A5%E7%90%86%E8%A7%A3%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%B3%BB%E7%BB%9F-%E5%A4%A7%E7%AB%AF%E8%BF%98%E6%98%AF%E5%B0%8F%E7%AB%AF/" />
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+<link rel="manifest" href="/manifest.json">
+<link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
+
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+<link href="/dist/even.c2a46f00.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.1.20/dist/jquery.fancybox.min.css" integrity="sha256-7TyXnr2YU040zfSP+rEcz29ggW4j56/ujTPwjMzyqFY=" crossorigin="anonymous">
+
+
+<meta property="og:title" content="深入理解计算机系统 大端还是小端？" />
+<meta property="og:description" content="字节顺序（Endianness） wiki 在计算机科学领域中，指存储器中或在数字通信链路中，组成多字节的字(例如 int32 四字节，short 两字节)的字节的" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://ruihut.github.io/post/%E6%B7%B1%E5%85%A5%E7%90%86%E8%A7%A3%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%B3%BB%E7%BB%9F-%E5%A4%A7%E7%AB%AF%E8%BF%98%E6%98%AF%E5%B0%8F%E7%AB%AF/" />
+<meta property="article:published_time" content="2019-09-05T22:47:30&#43;08:00"/>
+<meta property="article:modified_time" content="2019-09-05T22:47:30&#43;08:00"/>
+
+<meta itemprop="name" content="深入理解计算机系统 大端还是小端？">
+<meta itemprop="description" content="字节顺序（Endianness） wiki 在计算机科学领域中，指存储器中或在数字通信链路中，组成多字节的字(例如 int32 四字节，short 两字节)的字节的">
+
+
+<meta itemprop="datePublished" content="2019-09-05T22:47:30&#43;08:00" />
+<meta itemprop="dateModified" content="2019-09-05T22:47:30&#43;08:00" />
+<meta itemprop="wordCount" content="1550">
+
+
+
+<meta itemprop="keywords" content="深入理解计算机系统," />
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="深入理解计算机系统 大端还是小端？"/>
+<meta name="twitter:description" content="字节顺序（Endianness） wiki 在计算机科学领域中，指存储器中或在数字通信链路中，组成多字节的字(例如 int32 四字节，short 两字节)的字节的"/>
+
+<!--[if lte IE 9]>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/classlist/1.1.20170427/classList.min.js"></script>
+<![endif]-->
+
+<!--[if lt IE 9]>
+  <script src="https://cdn.jsdelivr.net/npm/html5shiv@3.7.3/dist/html5shiv.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/respond.js@1.4.2/dest/respond.min.js"></script>
+<![endif]-->
+
+</head>
+<body>
+  <div id="mobile-navbar" class="mobile-navbar">
+  <div class="mobile-header-logo">
+    <a href="/" class="logo">Mock Space</a>
+  </div>
+  <div class="mobile-navbar-icon">
+    <span></span>
+    <span></span>
+    <span></span>
+  </div>
+</div>
+<nav id="mobile-menu" class="mobile-menu slideout-menu">
+  <ul class="mobile-menu-list">
+    <a href="/">
+        <li class="mobile-menu-item">首页</li>
+      </a><a href="/post/">
+        <li class="mobile-menu-item">归档</li>
+      </a><a href="/tags/">
+        <li class="mobile-menu-item">标签</li>
+      </a><a href="/categories/">
+        <li class="mobile-menu-item">分类</li>
+      </a>
+  </ul>
+</nav>
+  <div class="container" id="mobile-panel">
+    <header id="header" class="header">
+        <div class="logo-wrapper">
+  <a href="/" class="logo">Mock Space</a>
+</div>
+
+<nav class="site-navbar">
+  <ul id="menu" class="menu">
+    <li class="menu-item">
+        <a class="menu-item-link" href="/">首页</a>
+      </li><li class="menu-item">
+        <a class="menu-item-link" href="/post/">归档</a>
+      </li><li class="menu-item">
+        <a class="menu-item-link" href="/tags/">标签</a>
+      </li><li class="menu-item">
+        <a class="menu-item-link" href="/categories/">分类</a>
+      </li>
+  </ul>
+</nav>
+    </header>
+
+    <main id="main" class="main">
+      <div class="content-wrapper">
+        <div id="content" class="content">
+          <article class="post">
+    
+    <header class="post-header">
+      <h1 class="post-title">深入理解计算机系统 大端还是小端？</h1>
+
+      <div class="post-meta">
+        <span class="post-time"> 2019-09-05 22:47 </span>
+        <div class="post-category">
+            <a href="/categories/%E6%B7%B1%E5%85%A5%E7%90%86%E8%A7%A3%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%B3%BB%E7%BB%9F/"> 深入理解计算机系统 </a>
+            </div>
+          <span class="more-meta"> 约 1550 字 </span>
+          <span class="more-meta"> 预计阅读 4 分钟 </span>
+        <span id="busuanzi_container_page_pv" class="more-meta"> <span id="busuanzi_value_page_pv"><img src="/img/spinner.svg" alt="spinner.svg"/></span> 次阅读 </span>
+      </div>
+    </header>
+
+    <div class="post-toc" id="post-toc">
+  <h2 class="post-toc-title">文章目录</h2>
+  <div class="post-toc-content">
+    <nav id="TableOfContents">
+<ul>
+<li>
+<ul>
+<li><a href="#字节顺序-endianness">字节顺序（Endianness）</a>
+<ul>
+<li><a href="#端-endian-的起源">端（endian) 的起源</a></li>
+<li><a href="#大端-还是-小端">大端 还是 小端</a>
+<ul>
+<li><a href="#为什么会有小端字节序">为什么会有小端字节序？</a></li>
+</ul></li>
+<li><a href="#什么时需要区分字节序">什么时需要区分字节序</a></li>
+</ul></li>
+<li><a href="#判断当前计算机的字节序">判断当前计算机的字节序</a></li>
+<li><a href="#参考">参考</a></li>
+</ul></li>
+</ul>
+</nav>
+  </div>
+</div>
+    <div class="post-content">
+      <h2 id="字节顺序-endianness">字节顺序（Endianness）</h2>
+
+<p><a href="https://en.wikipedia.org/wiki/Endianness">wiki</a></p>
+
+<blockquote>
+<p>在计算机科学领域中，指存储器中或在数字通信链路中，<strong>组成多字节的字(例如 int32 四字节，short 两字节)</strong>的字节的排列顺序。</p>
+</blockquote>
+
+<p><img src="/images/字节的内存表示.png" alt="endianness" /></p>
+
+<p>而我们常说的大端小端模式是计算机中 <strong>字节顺序（Endianness)</strong> 常见的两种表现形式。（此外还有混合序 (Middle-Endian))</p>
+
+<h3 id="端-endian-的起源">端（endian) 的起源</h3>
+
+<p>“endian”一词来源于十八世纪爱尔兰作家乔纳森·斯威夫特（Jonathan Swift）的小说《格列佛游记》（Gulliver's Travels）。小说中，小人国为水煮蛋该从大的一端（Big-End）剥开还是小的一端（Little-End）剥开而争论，争论的双方分别被称为“大端派”和“小端派”。以下是1726年关于大小端之争历史的描述：</p>
+
+<blockquote>
+<p>我下面要告诉你的是，Lilliput和Blefuscu这两大强国在过去36个月里一直在苦战。战争开始是由于以下的原因：我们大家都认为，吃鸡蛋前，原始的方法是打破鸡蛋较大的一端，可是当今皇帝的祖父小时候吃鸡蛋，一次按古法打鸡蛋时碰巧将一个手指弄破了。因此他的父亲，当时的皇帝，就下了一道敕令，命令全体臣民吃鸡蛋时打破鸡蛋较小的一端，违令者重罚。老百姓们对这项命令极其反感。历史告诉我们，由此曾经发生过6次叛乱，其中一个皇帝送了命，另一个丢了王位。这些叛乱大多都是由Blefuscu的国王大臣们煽动起来的。叛乱平息后，流亡的人总是逃到那个帝国去寻求避难。据估计，先后几次有11000人情愿受死也不肯去打破鸡蛋较小的一端。关于这一争端，曾出版过几百本大部著作，不过大端派的书一直是受禁的，法律也规定该派任何人不得做官。</p>
+</blockquote>
+
+<h3 id="大端-还是-小端">大端 还是 小端</h3>
+
+<p>Big-Endian和Little-Endian的定义如下：</p>
+
+<ol>
+<li>Little-Endian就是<strong>低位字节排放在内存的低地址端</strong>，高位字节排放在内存的高地址端。</li>
+<li>Big-Endian就是<strong>高位字节排放在内存的低地址端</strong>，低位字节排放在内存的高地址端。</li>
+</ol>
+
+<p><strong>0x1234567</strong> 的大端字节序和小端字节序的写法如下图。</p>
+
+<p><img src="/images/endian.gif" alt="endian" /></p>
+
+<p>如图所示，大端更像是人类的读写数值的方式，那为什么还有小端模式？</p>
+
+<h4 id="为什么会有小端字节序">为什么会有小端字节序？</h4>
+
+<blockquote>
+<p>计算机电路先处理<strong>低位</strong>字节，效率比较高(参考 &amp; 运算)，因为计算都是从低位开始的。所以，计算机的内部处理都是小端字节序。但是，人类还是习惯读写大端字节序。所以，除了计算机的内部处理，其他的场合几乎都是大端字节序，比如网络传输和文件储存。</p>
+</blockquote>
+
+<h3 id="什么时需要区分字节序">什么时需要区分字节序</h3>
+
+<p>计算机处理字节序的时候，不知道什么是高位字节，什么是低位字节。它只知道按顺序读取字节，先读第一个字节，再读第二个字节。</p>
+
+<blockquote>
+<p>只有读取的时候，才必须区分字节序，其他情况都不用考虑。</p>
+</blockquote>
+
+<p>处理器读取外部数据(例如： 内存中的数据)的时候，必须知道数据的字节序，将其转成正确的值。然后，就正常使用这个值，完全不用再考虑字节序。
+<br>
+即使是向外部设备写入数据，也不用考虑字节序，正常写入一个值即可。外部设备会自己处理字节序的问题。
+<br>
+例如 处理器读入一个 short 2 字节的整数，</p>
+
+<blockquote>
+<p>如果是大端字节序  <strong>x = buf[offset] * 256 + buf[offset + 1];</strong></p>
+
+<p>如果是小端字节序 <strong>x = buf[offset] + 256 * buf[offset + 1];</strong></p>
+</blockquote>
+
+<p>上面代码中，buf是整个数据块在内存中的起始地址，offset是当前正在读取的位置。第一个字节乘以256，再加上第二个字节，就是大端字节序的值。</p>
+
+<h2 id="判断当前计算机的字节序">判断当前计算机的字节序</h2>
+
+<p>c 实现</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span></pre></td>
+<td class="lntd">
+<pre class="chroma">// 强制类型转换实现
+int byteOrder() {
+    short a = 0x1234;
+    char b = (char) a // 强制类型转换取 a 的低 8 位
+    if (b == 0x12) {
+        return 1 // big endian
+    } else if (b == 0x34){
+        return 2 // little endian
+    } else {
+        return -1 // unkown type
+    }
+}
+
+// 利用了union各字段共享内存的特性：
+int byteOrder() {
+    union {
+        short value;
+        char bytes[2];
+    } u;
+
+    u.value = 0x0102;
+
+    if (u.bytes[0] == 1 &amp;&amp; u.bytes[1] == 2) {
+        return 1; // big endian
+    } else if (u.bytes[0] == 2 &amp;&amp; u.bytes[1] == 1) {
+        return 2; // little endian
+    } else {
+        return -1; // unknown
+    }
+}</pre></td></tr></table>
+</div>
+</div>
+<p>golang 实现</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span></pre></td>
+<td class="lntd">
+<pre class="chroma">func endian() {
+	a := int32(0x01020304)
+	u := unsafe.Pointer(&amp;a)
+	pb := (*byte)(u)
+	c := *pb
+
+	if c == 0x04{
+		fmt.Println(&#34;little endian&#34;)
+	} else {
+		fmt.Println(&#34;big endian&#34;)
+	}
+}</pre></td></tr></table>
+</div>
+</div>
+<h2 id="参考">参考</h2>
+
+<p><a href="http://www.ruanyifeng.com/blog/2016/11/byte-order.html">理解字节序</a></p>
+
+<p><a href="https://zh.wikipedia.org/wiki/%E5%AD%97%E8%8A%82%E5%BA%8F#%E6%B7%B7%E5%90%88%E5%BA%8F">wiki 定义</a></p>
+
+<p><a href="www.baidu.com">深入理解计算机系统 - 信息存储</a></p>
+    </div>
+
+    
+<footer class="post-footer">
+      <div class="post-tags">
+          <a href="/tags/%E6%B7%B1%E5%85%A5%E7%90%86%E8%A7%A3%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%B3%BB%E7%BB%9F/">深入理解计算机系统</a>
+          </div>
+      <nav class="post-nav">
+        
+        <a class="next" href="/post/golang-map/">
+            <span class="next-text nav-default">Golang Map 入门到实现</span>
+            <span class="next-text nav-mobile">下一篇</span>
+            <i class="iconfont icon-right"></i>
+          </a>
+      </nav>
+    </footer>
+  </article>
+        </div>
+        
+  
+  
+
+  
+    <script src="https://utteranc.es/client.js"
+            repo="ruiHut/ruihut.github.io"
+            issue-term="pathname"
+            theme="github-light"
+            crossorigin="anonymous"
+            async>
+    </script>
+    <noscript>Please enable JavaScript to view the <a href="https://github.com/utterance">comments powered by utterances.</a></noscript>
+
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="social-links">
+      <a href="15197162859@163.com" class="iconfont icon-email" title="email"></a>
+      <a href="https://github.com/ruiHut" class="iconfont icon-github" title="github"></a>
+  <a href="http://ruihut.github.io/index.xml" type="application/rss+xml" class="iconfont icon-rss" title="rss"></a>
+</div>
+
+<div class="copyright">
+  <span class="copyright-year">
+    <span class="heart">
+      <i class="iconfont icon-heart"></i>
+    </span>
+    <span class="author">ZhouWang</span>
+  </span>
+</div>
+    </footer>
+
+    <div class="back-to-top" id="back-to-top">
+      <i class="iconfont icon-up"></i>
+    </div>
+  </div>
+  <script src="/lib/highlight/highlight.pack.js?v=20171001"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jquery@3.2.1/dist/jquery.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/slideout@1.0.1/dist/slideout.min.js" integrity="sha256-t+zJ/g8/KXIJMjSVQdnibt4dlaDxc9zXr/9oNPeWqdg=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.1.20/dist/jquery.fancybox.min.js" integrity="sha256-XVLffZaxoWfGUEbdzuLi7pwaUJv1cecsQJQqGLe7axY=" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/timeago.js@3.0.2/dist/timeago.min.js" integrity="sha256-jwCP0NAdCBloaIWTWHmW4i3snUNMHUNO+jr9rYd2iOI=" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/timeago.js@3.0.2/dist/timeago.locales.min.js" integrity="sha256-ZwofwC1Lf/faQCzN7nZtfijVV6hSwxjQMwXL4gn9qU8=" crossorigin="anonymous"></script>
+  <script><!-- NOTE: timeago.js uses the language code format like "zh_CN" (underscore and case sensitive) -->
+    var languageCode = "zh-cn".replace(/-/g, '_').replace(/_(.*)/, function ($0, $1) {return $0.replace($1, $1.toUpperCase());});
+    timeago().render(document.querySelectorAll('.timeago'), languageCode);
+    timeago.cancel();  
+  </script>
+<script type="text/javascript" src="/dist/even.26188efa.min.js"></script>
+
+
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+	ga('create', 'UA-138883536-1', 'auto');
+	ga('set', 'anonymizeIp', true);
+	ga('send', 'pageview');
+}
+</script>
+<script async src='https://www.google-analytics.com/analytics.js'></script>
+
+
+
+
+
+
+
+</body>
+</html>

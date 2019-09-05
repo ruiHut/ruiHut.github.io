@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>深入理解计算机系统 on ZhouWang`s Blogs Space</title>
+    <link>http://ruihut.github.io/categories/%E6%B7%B1%E5%85%A5%E7%90%86%E8%A7%A3%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%B3%BB%E7%BB%9F/</link>
+    <description>Recent content in 深入理解计算机系统 on ZhouWang`s Blogs Space</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>zh-cn</language>
+    <lastBuildDate>Thu, 05 Sep 2019 22:47:30 +0800</lastBuildDate>
+    
+	<atom:link href="http://ruihut.github.io/categories/%E6%B7%B1%E5%85%A5%E7%90%86%E8%A7%A3%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%B3%BB%E7%BB%9F/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>深入理解计算机系统 大端还是小端？</title>
+      <link>http://ruihut.github.io/post/%E6%B7%B1%E5%85%A5%E7%90%86%E8%A7%A3%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%B3%BB%E7%BB%9F-%E5%A4%A7%E7%AB%AF%E8%BF%98%E6%98%AF%E5%B0%8F%E7%AB%AF/</link>
+      <pubDate>Thu, 05 Sep 2019 22:47:30 +0800</pubDate>
+      
+      <guid>http://ruihut.github.io/post/%E6%B7%B1%E5%85%A5%E7%90%86%E8%A7%A3%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%B3%BB%E7%BB%9F-%E5%A4%A7%E7%AB%AF%E8%BF%98%E6%98%AF%E5%B0%8F%E7%AB%AF/</guid>
+      <description>字节顺序（Endianness） wiki 在计算机科学领域中，指存储器中或在数字通信链路中，组成多字节的字(例如 int32 四字节，short 两字节)的字节的</description>
+    </item>
+    
+  </channel>
+</rss>

@@ -6,10 +6,28 @@
     <description>Recent content in golang on ZhouWang`s Blogs Space</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>zh-cn</language>
-    <lastBuildDate>Thu, 29 Aug 2019 13:59:14 +0800</lastBuildDate>
+    <lastBuildDate>Wed, 04 Sep 2019 14:44:45 +0800</lastBuildDate>
     
 	<atom:link href="http://ruihut.github.io/tags/golang/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>Golang Map 入门到实现</title>
+      <link>http://ruihut.github.io/post/golang-map/</link>
+      <pubDate>Wed, 04 Sep 2019 14:44:45 +0800</pubDate>
+      
+      <guid>http://ruihut.github.io/post/golang-map/</guid>
+      <description>哈希表是一种巧妙并且实用的数据结构。它是一个无序的key/value对的集合，其中所有的key都是不同的，然后通过给定的key可以在常数时间</description>
+    </item>
+    
+    <item>
+      <title>Golang Modules 的前世今生</title>
+      <link>http://ruihut.github.io/post/golang-modules/</link>
+      <pubDate>Fri, 30 Aug 2019 15:23:26 +0800</pubDate>
+      
+      <guid>http://ruihut.github.io/post/golang-modules/</guid>
+      <description>序 $GOPATH/go.mod exists but should not 在学习 golang 之初，便对 golang 的包管理一直一知半解(尤其是一上来就是要了解 gopath、goroot)。本文就 1.11 新特性 Modules 的前世今生，对 golang 的</description>
+    </item>
     
     <item>
       <title>Golang sync.Mutex 源码分析</title>
