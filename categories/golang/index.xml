@@ -6,10 +6,19 @@
     <description>Recent content in golang on ZhouWang`s Blogs Space</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>zh-cn</language>
-    <lastBuildDate>Wed, 04 Sep 2019 14:44:45 +0800</lastBuildDate>
+    <lastBuildDate>Mon, 09 Sep 2019 09:14:05 +0800</lastBuildDate>
     
 	<atom:link href="http://ruihut.github.io/categories/golang/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>Golang 并发控制与通信</title>
+      <link>http://ruihut.github.io/post/golang-context/</link>
+      <pubDate>Mon, 09 Sep 2019 09:14:05 +0800</pubDate>
+      
+      <guid>http://ruihut.github.io/post/golang-context/</guid>
+      <description>序 对于 golang 而言，我们避不开的要谈到它一直被吹捧的一大优势 - 原生支持并发。并发编程是自从摩尔定律逐渐失效，硬件工程师将性能提升的任务逐渐以多核、</description>
+    </item>
     
     <item>
       <title>Golang Map 入门到实现</title>

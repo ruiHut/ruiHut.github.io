@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <title>Golang 并发控制与通信 - ZhouWang`s Blogs Space</title>
+  <meta name="renderer" content="webkit" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+<meta name="theme-color" content="#f8f5ec" />
+<meta name="msapplication-navbutton-color" content="#f8f5ec">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="#f8f5ec">
+
+
+<meta name="author" content="ZhouWang" /><meta name="description" content="序 对于 golang 而言，我们避不开的要谈到它一直被吹捧的一大优势 - 原生支持并发。并发编程是自从摩尔定律逐渐失效，硬件工程师将性能提升的任务逐渐以多核、" /><meta name="keywords" content="ZhouWang blog, Github, Golang, Java, blog" />
+
+
+
+
+
+
+<meta name="generator" content="Hugo 0.54.0 with even 4.0.0" />
+
+
+<link rel="canonical" href="http://ruihut.github.io/post/golang-context/" />
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+<link rel="manifest" href="/manifest.json">
+<link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
+
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+<link href="/dist/even.c2a46f00.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.1.20/dist/jquery.fancybox.min.css" integrity="sha256-7TyXnr2YU040zfSP+rEcz29ggW4j56/ujTPwjMzyqFY=" crossorigin="anonymous">
+
+
+<meta property="og:title" content="Golang 并发控制与通信" />
+<meta property="og:description" content="序 对于 golang 而言，我们避不开的要谈到它一直被吹捧的一大优势 - 原生支持并发。并发编程是自从摩尔定律逐渐失效，硬件工程师将性能提升的任务逐渐以多核、" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://ruihut.github.io/post/golang-context/" />
+<meta property="article:published_time" content="2019-09-09T09:14:05&#43;08:00"/>
+<meta property="article:modified_time" content="2019-09-09T09:14:05&#43;08:00"/>
+
+<meta itemprop="name" content="Golang 并发控制与通信">
+<meta itemprop="description" content="序 对于 golang 而言，我们避不开的要谈到它一直被吹捧的一大优势 - 原生支持并发。并发编程是自从摩尔定律逐渐失效，硬件工程师将性能提升的任务逐渐以多核、">
+
+
+<meta itemprop="datePublished" content="2019-09-09T09:14:05&#43;08:00" />
+<meta itemprop="dateModified" content="2019-09-09T09:14:05&#43;08:00" />
+<meta itemprop="wordCount" content="3245">
+
+
+
+<meta itemprop="keywords" content="golang," />
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="Golang 并发控制与通信"/>
+<meta name="twitter:description" content="序 对于 golang 而言，我们避不开的要谈到它一直被吹捧的一大优势 - 原生支持并发。并发编程是自从摩尔定律逐渐失效，硬件工程师将性能提升的任务逐渐以多核、"/>
+
+<!--[if lte IE 9]>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/classlist/1.1.20170427/classList.min.js"></script>
+<![endif]-->
+
+<!--[if lt IE 9]>
+  <script src="https://cdn.jsdelivr.net/npm/html5shiv@3.7.3/dist/html5shiv.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/respond.js@1.4.2/dest/respond.min.js"></script>
+<![endif]-->
+
+</head>
+<body>
+  <div id="mobile-navbar" class="mobile-navbar">
+  <div class="mobile-header-logo">
+    <a href="/" class="logo">Mock Space</a>
+  </div>
+  <div class="mobile-navbar-icon">
+    <span></span>
+    <span></span>
+    <span></span>
+  </div>
+</div>
+<nav id="mobile-menu" class="mobile-menu slideout-menu">
+  <ul class="mobile-menu-list">
+    <a href="/">
+        <li class="mobile-menu-item">首页</li>
+      </a><a href="/post/">
+        <li class="mobile-menu-item">归档</li>
+      </a><a href="/tags/">
+        <li class="mobile-menu-item">标签</li>
+      </a><a href="/categories/">
+        <li class="mobile-menu-item">分类</li>
+      </a>
+  </ul>
+</nav>
+  <div class="container" id="mobile-panel">
+    <header id="header" class="header">
+        <div class="logo-wrapper">
+  <a href="/" class="logo">Mock Space</a>
+</div>
+
+<nav class="site-navbar">
+  <ul id="menu" class="menu">
+    <li class="menu-item">
+        <a class="menu-item-link" href="/">首页</a>
+      </li><li class="menu-item">
+        <a class="menu-item-link" href="/post/">归档</a>
+      </li><li class="menu-item">
+        <a class="menu-item-link" href="/tags/">标签</a>
+      </li><li class="menu-item">
+        <a class="menu-item-link" href="/categories/">分类</a>
+      </li>
+  </ul>
+</nav>
+    </header>
+
+    <main id="main" class="main">
+      <div class="content-wrapper">
+        <div id="content" class="content">
+          <article class="post">
+    
+    <header class="post-header">
+      <h1 class="post-title">Golang 并发控制与通信</h1>
+
+      <div class="post-meta">
+        <span class="post-time"> 2019-09-09 09:14 </span>
+        <div class="post-category">
+            <a href="/categories/golang/"> golang </a>
+            </div>
+          <span class="more-meta"> 约 3245 字 </span>
+          <span class="more-meta"> 预计阅读 7 分钟 </span>
+        <span id="busuanzi_container_page_pv" class="more-meta"> <span id="busuanzi_value_page_pv"><img src="/img/spinner.svg" alt="spinner.svg"/></span> 次阅读 </span>
+      </div>
+    </header>
+
+    <div class="post-toc" id="post-toc">
+  <h2 class="post-toc-title">文章目录</h2>
+  <div class="post-toc-content">
+    <nav id="TableOfContents">
+<ul>
+<li>
+<ul>
+<li><a href="#序">序</a></li>
+<li><a href="#context-是什么">context 是什么？</a></li>
+<li><a href="#golang-并发控制与通信的方式">golang 并发控制与通信的方式</a>
+<ul>
+<li><a href="#共享全局变量-共享内存">共享全局变量 (共享内存)</a></li>
+<li><a href="#channel-通信-消息传递">channel 通信（消息传递）</a>
+<ul>
+<li><a href="#csp-模型">CSP 模型</a></li>
+</ul></li>
+<li><a href="#上下文-context">上下文 Context</a>
+<ul>
+<li><a href="#context-实际应用">context 实际应用</a></li>
+</ul></li>
+<li><a href="#context-使用规范">context 使用规范</a></li>
+</ul></li>
+<li><a href="#参考">参考</a></li>
+</ul></li>
+</ul>
+</nav>
+  </div>
+</div>
+    <div class="post-content">
+      <h2 id="序">序</h2>
+
+<p>对于 golang 而言，我们避不开的要谈到它一直被吹捧的一大优势 - <strong>原生支持并发</strong>。并发编程是自从摩尔定律逐渐失效，硬件工程师将性能提升的任务逐渐以多核、的方式委托给软件开发者后作为软件工程师必要掌握的一项技能。而由于并非的不确定性，对于许多业务需求又存在着需要确定顺序的地方，也就衍生出各式各样的同步、通信方式本文就以 golang context 包来谈谈 go 的并非控制与通信。</p>
+
+<h2 id="context-是什么">context 是什么？</h2>
+
+<p>golang 1.12 src/context</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span></pre></td>
+<td class="lntd">
+<pre class="chroma">// Package context defines the Context type, which carries deadlines,
+// cancelation signals, and other request-scoped values across API boundaries
+// and between processes.</pre></td></tr></table>
+</div>
+</div>
+<p>Go 1.7 标准库引入 context，中文译作“上下文”，准确说它是 <strong>goroutine 的上下文</strong>，包含 goroutine 的运行状态、环境、现场等信息。作为 goroutine 之间的传输媒介。</p>
+
+<p><em>tips： 在开发 go 程序时，需要使用多个 goroutine 并发处理任务，而每个 goroutine 成功创建之后我们可以简单的看成是一个 线程（绿色线程）。而在并发程序中，往往牵扯到同步与通信的问题。在 Context 出现包之前，主要使用 共享全局变量、select + channel 事件的形式实现同步通信。</em></p>
+
+<p><br>
+context 主要用来在 goroutine 之间传递上下文信息，包括：取消信号、超时时间、截止时间、k-v 等。
+<br></p>
+
+<p>随着 context 包的引入，标准库中很多接口因此加上了 context 参数，例如 database/sql 包。context 几乎成为了<strong>并发控制和超时控制</strong>的标准做法。</p>
+
+<h2 id="golang-并发控制与通信的方式">golang 并发控制与通信的方式</h2>
+
+<blockquote>
+<p>开发go程序的时候，时常需要使用goroutine并发处理任务，有时候这些goroutine是相互独立的，而有的时候，多个goroutine之间常常是需要同步与通信的。另一种情况，主goroutine需要控制它所属的子goroutine，总结起来，实现多个goroutine间的同步与通信大致有：</p>
+</blockquote>
+
+<ul>
+<li>共享全局变量</li>
+<li>channel 通信（CSP 模型）</li>
+<li>context 包</li>
+</ul>
+
+<h3 id="共享全局变量-共享内存">共享全局变量 (共享内存)</h3>
+
+<p>这是最简单的一种方式，简单示例</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span></pre></td>
+<td class="lntd">
+<pre class="chroma"><span class="kn">package</span> <span class="nx">main</span>
+
+<span class="kn">import</span> <span class="p">(</span>
+	<span class="s">&#34;fmt&#34;</span>
+	<span class="s">&#34;time&#34;</span>
+<span class="p">)</span>
+
+<span class="kd">var</span> <span class="nx">flag</span> <span class="p">=</span> <span class="kc">true</span>
+
+<span class="kd">func</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
+	<span class="k">go</span> <span class="nf">say</span><span class="p">()</span>
+	<span class="nx">time</span><span class="p">.</span><span class="nf">Sleep</span><span class="p">(</span><span class="nx">time</span><span class="p">.</span><span class="nx">Second</span> <span class="o">*</span> <span class="mi">2</span><span class="p">)</span>
+	<span class="nx">flag</span> <span class="p">=</span> <span class="kc">false</span><span class="p">;</span>
+	<span class="nx">fmt</span><span class="p">.</span><span class="nf">Println</span><span class="p">(</span><span class="s">&#34;main ending&#34;</span><span class="p">)</span>
+<span class="p">}</span>
+
+<span class="kd">func</span> <span class="nf">say</span><span class="p">()</span> <span class="p">{</span>
+	<span class="k">for</span> <span class="nx">flag</span> <span class="p">{</span>
+		<span class="nx">fmt</span><span class="p">.</span><span class="nf">Println</span><span class="p">(</span><span class="s">&#34;hello world!&#34;</span><span class="p">)</span>
+		<span class="nx">time</span><span class="p">.</span><span class="nf">Sleep</span><span class="p">(</span><span class="nx">time</span><span class="p">.</span><span class="nx">Second</span><span class="p">)</span>
+	<span class="p">}</span>
+<span class="p">}</span></pre></td></tr></table>
+</div>
+</div>
+<p>共享全局变量是一种优缺点很明显的同步方式，
+* 其通过一个变量控制所有子 goroutine（逻辑上的父子关系）的状态。当然此示例中只支持多读一写，否则将出现脏数据问题（可以用锁来解决）。
+* 此外该方式能传递的信息量很少，如需要传递很多信息，又会牵扯到更加复杂的同步代码。</p>
+
+<p><img src="/images/golang-share.png" alt="share" /></p>
+
+<p><em>画外音：在很多主流的编程语言中，当我们想要并发执行一些代码时，我们往往都会在多个线程之间共享变量，同时为了解决线程冲突的问题，我们又需要在读写这些变量时加锁。在 Java 中就是基于共享内存实现线程间的通信，所以锁在 java 中的地位举足轻重。</em></p>
+
+<h3 id="channel-通信-消息传递">channel 通信（消息传递）</h3>
+
+<p>channel 是 Go 语言中一个重要的特性。而要理解 channel 就需要先了解 CSP 模型。</p>
+
+<h4 id="csp-模型">CSP 模型</h4>
+
+<p>CSP 是 Communicating sequential processes 的简称，是一种并发编程模型
+<br>
+<a href="https://en.wikipedia.org/wiki/Communicating_sequential_processes">wiki</a></p>
+
+<blockquote>
+<p>In computer science, communicating sequential processes (CSP) is a formal language for describing patterns of interaction in concurrent systems.</p>
+</blockquote>
+
+<p>简单来说，CSP 模型由并发<strong>执行的实体（线程或者进程）所组成</strong>，实体之间<strong>通过发送消息</strong>进行通信，这里发送消息时使用的就是通道，或者叫 channel。CSP 模型的关键是关注 channel，而不关注发送消息的实体。Go 语言实现了 CSP 部分理论，goroutine 对应 CSP 中并发执行的实体。
+<br></p>
+
+<p>channel默认为同步模式，即不创建缓冲区，发送和接收需要一一配对，<strong>不然发送方会被一直阻塞，直到数据被接收</strong>。需要注意的是，同步的channel不能在一个协程中发送&amp;接收，因为会被阻塞而永远跑不到接收的语句, 示例代码：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span></pre></td>
+<td class="lntd">
+<pre class="chroma"><span class="kn">package</span> <span class="nx">main</span>
+
+<span class="kn">import</span> <span class="s">&#34;fmt&#34;</span>
+
+<span class="kd">func</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
+	<span class="nx">ch</span> <span class="o">:=</span> <span class="nb">make</span><span class="p">(</span><span class="kd">chan</span> <span class="kt">int</span><span class="p">)</span>
+
+	<span class="k">go</span> <span class="kd">func</span><span class="p">()</span> <span class="p">{</span>
+		<span class="k">for</span> <span class="p">{</span>
+			<span class="k">if</span> <span class="nx">c</span><span class="p">,</span> <span class="nx">ok</span> <span class="o">:=</span> <span class="o">&lt;-</span><span class="nx">ch</span><span class="p">;</span> <span class="nx">ok</span> <span class="p">{</span> <span class="c1">// !ok 说明 ch 已经被 close
+</span><span class="c1"></span>				<span class="nx">fmt</span><span class="p">.</span><span class="nf">Println</span><span class="p">(</span><span class="nx">c</span><span class="p">)</span>
+			<span class="p">}</span>
+		<span class="p">}</span>
+	<span class="p">}()</span>
+
+	<span class="nx">ch</span> <span class="o">&lt;-</span> <span class="mi">1</span>
+	<span class="nx">ch</span> <span class="o">&lt;-</span> <span class="mi">2</span>
+	<span class="nb">close</span><span class="p">(</span><span class="nx">ch</span><span class="p">)</span>
+<span class="p">}</span></pre></td></tr></table>
+</div>
+</div>
+<p><img src="/images/golang-channel.png" alt="channel" /></p>
+
+<p>channel 通信控制基于 CSP 模型，相比于传统的线程与锁并发模型，避免了<strong>大量的加锁解锁的性能消耗</strong>，<strong>同时又做到了不同 goroutine 之间的解耦</strong>。而使用 CSP 模型，channel 是第一对象，可以被独立地创建，写入和读出数据，更容易进行扩展。
+<br></p>
+
+<p>在 go 中，推崇的设计模式是 <strong>不要通过共享内存的方式进行通信，而是应该通过通信的方式共享内存</strong> 虽然我们在 Golang 中也能使用共享内存加互斥锁来实现并发编程。至于两者之间的优劣就不再此深入展开。而 channel 的更多使用姿势（channel + select 超时控制）已经实现原理，将在后续补充。</p>
+
+<h3 id="上下文-context">上下文 Context</h3>
+
+<p>在 Go 语言中每一个请求都是通过一个单独的 Goroutine 进行处理，HTTP/RPC 请求的处理往往都会启动新的 Goroutine 访问数据库和 RPC 服务。而通过使用 Context 就可以实现在多个不同 goroutine 之间进行传递</p>
+
+<p><img src="/images/golang-context.png" alt="context" /></p>
+
+<p>这些 goroutine 需要<strong>共享这个请求的基本数据</strong>，例如登陆的 token，处理请求的最大超时时间（如果超过此值再返回数据，请求方因为超时接收不到）等等。当请求被取消或是处理时间太长，这有可能是使用者关闭了浏览器或是已经超过了请求方规定的超时时间，请求方直接放弃了这次请求结果。这时，所有正在为这个请求工作的 goroutine 需要快速退出，因为它们的“工作成果”不再被需要了。在相关联的 goroutine 都退出后，系统就可以回收相关的资源。</p>
+
+<p><br></p>
+
+<p>用简练一些的话来说，在Go 里，我们<strong>不能直接杀死协程</strong>，协程的关闭一般会用 channel+select 方式来控制。但是在某些场景下，例如处理一个请求衍生了很多协程，这些协程之间是相互关联的：需要共享一些全局变量、有共同的 deadline 等，而且可以同时被关闭。再用 channel+select 就会比较麻烦，这时就可以通过 context 来实现。</p>
+
+<h4 id="context-实际应用">context 实际应用</h4>
+
+<p><a href="https://36kr.com/p/5073181">今日头条Go建千亿级微服务的实践</a>
+在头条的实践中抽象出了两种并发请求常见模型</p>
+
+<p>wait</p>
+
+<p><img src="/images/golang-wait.jpg" alt="wait" /></p>
+
+<p>cancel</p>
+
+<p><img src="/images/golang-cancel.jpg" alt="cancel" /></p>
+
+<p>示例：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span><span class="lnt">43
+</span><span class="lnt">44
+</span><span class="lnt">45
+</span><span class="lnt">46
+</span><span class="lnt">47
+</span><span class="lnt">48
+</span><span class="lnt">49
+</span><span class="lnt">50
+</span><span class="lnt">51
+</span><span class="lnt">52
+</span><span class="lnt">53
+</span><span class="lnt">54
+</span><span class="lnt">55
+</span><span class="lnt">56
+</span><span class="lnt">57
+</span><span class="lnt">58
+</span><span class="lnt">59
+</span><span class="lnt">60
+</span><span class="lnt">61
+</span><span class="lnt">62
+</span><span class="lnt">63
+</span><span class="lnt">64
+</span><span class="lnt">65
+</span><span class="lnt">66
+</span><span class="lnt">67
+</span><span class="lnt">68
+</span><span class="lnt">69
+</span><span class="lnt">70
+</span><span class="lnt">71
+</span><span class="lnt">72
+</span></pre></td>
+<td class="lntd">
+<pre class="chroma"><span class="kn">package</span> <span class="nx">main</span>
+
+<span class="kn">import</span> <span class="p">(</span>
+	<span class="s">&#34;context&#34;</span>
+	<span class="s">&#34;crypto/md5&#34;</span>
+	<span class="s">&#34;fmt&#34;</span>
+	<span class="s">&#34;io/ioutil&#34;</span>
+	<span class="s">&#34;net/http&#34;</span>
+	<span class="s">&#34;sync&#34;</span>
+	<span class="s">&#34;time&#34;</span>
+<span class="p">)</span>
+
+<span class="kd">type</span> <span class="nx">favContextKey</span> <span class="kt">string</span>
+
+<span class="kd">func</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
+	<span class="nx">wg</span> <span class="o">:=</span> <span class="o">&amp;</span><span class="nx">sync</span><span class="p">.</span><span class="nx">WaitGroup</span><span class="p">{}</span>
+	<span class="nx">values</span> <span class="o">:=</span> <span class="p">[]</span><span class="kt">string</span><span class="p">{</span><span class="s">&#34;https://www.baidu.com/&#34;</span><span class="p">,</span> <span class="s">&#34;https://www.zhihu.com/&#34;</span><span class="p">}</span>
+	<span class="nx">ctx</span><span class="p">,</span> <span class="nx">cancel</span> <span class="o">:=</span> <span class="nx">context</span><span class="p">.</span><span class="nf">WithCancel</span><span class="p">(</span><span class="nx">context</span><span class="p">.</span><span class="nf">Background</span><span class="p">())</span>
+
+	<span class="k">for</span> <span class="nx">_</span><span class="p">,</span> <span class="nx">url</span> <span class="o">:=</span> <span class="k">range</span> <span class="nx">values</span> <span class="p">{</span>
+		<span class="nx">wg</span><span class="p">.</span><span class="nf">Add</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+		<span class="nx">subCtx</span> <span class="o">:=</span> <span class="nx">context</span><span class="p">.</span><span class="nf">WithValue</span><span class="p">(</span><span class="nx">ctx</span><span class="p">,</span> <span class="nf">favContextKey</span><span class="p">(</span><span class="s">&#34;url&#34;</span><span class="p">),</span> <span class="nx">url</span><span class="p">)</span>
+		<span class="k">go</span> <span class="nf">reqURL</span><span class="p">(</span><span class="nx">subCtx</span><span class="p">,</span> <span class="nx">wg</span><span class="p">)</span>
+	<span class="p">}</span>
+
+	<span class="k">go</span> <span class="kd">func</span><span class="p">()</span> <span class="p">{</span>
+		<span class="nx">time</span><span class="p">.</span><span class="nf">Sleep</span><span class="p">(</span><span class="nx">time</span><span class="p">.</span><span class="nx">Second</span> <span class="o">*</span> <span class="mi">3</span><span class="p">)</span>
+		<span class="nf">cancel</span><span class="p">()</span>
+	<span class="p">}()</span>
+
+	<span class="nx">wg</span><span class="p">.</span><span class="nf">Wait</span><span class="p">()</span>
+	<span class="nx">fmt</span><span class="p">.</span><span class="nf">Println</span><span class="p">(</span><span class="s">&#34;exit main goroutine&#34;</span><span class="p">)</span>
+<span class="p">}</span>
+
+<span class="kd">func</span> <span class="nf">reqURL</span><span class="p">(</span><span class="nx">ctx</span> <span class="nx">context</span><span class="p">.</span><span class="nx">Context</span><span class="p">,</span> <span class="nx">wg</span> <span class="o">*</span><span class="nx">sync</span><span class="p">.</span><span class="nx">WaitGroup</span><span class="p">)</span> <span class="p">{</span>
+	<span class="k">defer</span> <span class="nx">wg</span><span class="p">.</span><span class="nf">Done</span><span class="p">()</span>
+	<span class="nx">url</span><span class="p">,</span> <span class="nx">_</span> <span class="o">:=</span> <span class="nx">ctx</span><span class="p">.</span><span class="nf">Value</span><span class="p">(</span><span class="nf">favContextKey</span><span class="p">(</span><span class="s">&#34;url&#34;</span><span class="p">)).(</span><span class="kt">string</span><span class="p">)</span>
+	<span class="k">for</span> <span class="p">{</span>
+		<span class="k">select</span> <span class="p">{</span>
+		<span class="k">case</span> <span class="o">&lt;-</span><span class="nx">ctx</span><span class="p">.</span><span class="nf">Done</span><span class="p">():</span>
+			<span class="nx">fmt</span><span class="p">.</span><span class="nf">Printf</span><span class="p">(</span><span class="s">&#34;stop getting url:%s\n&#34;</span><span class="p">,</span> <span class="nx">url</span><span class="p">)</span>
+			<span class="k">return</span>
+		<span class="k">default</span><span class="p">:</span>
+			<span class="nx">r</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">http</span><span class="p">.</span><span class="nf">Get</span><span class="p">(</span><span class="nx">url</span><span class="p">)</span>
+			<span class="k">if</span> <span class="nx">r</span><span class="p">.</span><span class="nx">StatusCode</span> <span class="o">==</span> <span class="nx">http</span><span class="p">.</span><span class="nx">StatusOK</span> <span class="o">&amp;&amp;</span> <span class="nx">err</span> <span class="o">==</span> <span class="kc">nil</span> <span class="p">{</span>
+				<span class="nx">body</span><span class="p">,</span> <span class="nx">_</span> <span class="o">:=</span> <span class="nx">ioutil</span><span class="p">.</span><span class="nf">ReadAll</span><span class="p">(</span><span class="nx">r</span><span class="p">.</span><span class="nx">Body</span><span class="p">)</span>
+				<span class="nx">subCtx</span> <span class="o">:=</span> <span class="nx">context</span><span class="p">.</span><span class="nf">WithValue</span><span class="p">(</span><span class="nx">ctx</span><span class="p">,</span> <span class="nf">favContextKey</span><span class="p">(</span><span class="s">&#34;resp&#34;</span><span class="p">),</span> <span class="nx">fmt</span><span class="p">.</span><span class="nf">Sprintf</span><span class="p">(</span><span class="s">&#34;%s%x&#34;</span><span class="p">,</span> <span class="nx">url</span><span class="p">,</span> <span class="nx">md5</span><span class="p">.</span><span class="nf">Sum</span><span class="p">(</span><span class="nx">body</span><span class="p">)))</span>
+				<span class="nx">wg</span><span class="p">.</span><span class="nf">Add</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+				<span class="k">go</span> <span class="nf">showResp</span><span class="p">(</span><span class="nx">subCtx</span><span class="p">,</span> <span class="nx">wg</span><span class="p">)</span>
+			<span class="p">}</span>
+			<span class="nx">r</span><span class="p">.</span><span class="nx">Body</span><span class="p">.</span><span class="nf">Close</span><span class="p">()</span>
+			<span class="c1">//启动子goroutine是为了不阻塞当前goroutine，这里在实际场景中可以去执行其他逻辑，这里为了方便直接sleep一秒
+</span><span class="c1"></span>			<span class="c1">// doSometing()
+</span><span class="c1"></span>			<span class="nx">time</span><span class="p">.</span><span class="nf">Sleep</span><span class="p">(</span><span class="nx">time</span><span class="p">.</span><span class="nx">Second</span> <span class="o">*</span> <span class="mi">1</span><span class="p">)</span>
+		<span class="p">}</span>
+	<span class="p">}</span>
+<span class="p">}</span>
+
+<span class="kd">func</span> <span class="nf">showResp</span><span class="p">(</span><span class="nx">ctx</span> <span class="nx">context</span><span class="p">.</span><span class="nx">Context</span><span class="p">,</span> <span class="nx">wg</span> <span class="o">*</span><span class="nx">sync</span><span class="p">.</span><span class="nx">WaitGroup</span><span class="p">)</span> <span class="p">{</span>
+	<span class="k">defer</span> <span class="nx">wg</span><span class="p">.</span><span class="nf">Done</span><span class="p">()</span>
+	<span class="k">for</span> <span class="p">{</span>
+		<span class="k">select</span> <span class="p">{</span>
+		<span class="k">case</span> <span class="o">&lt;-</span><span class="nx">ctx</span><span class="p">.</span><span class="nf">Done</span><span class="p">():</span>
+			<span class="nx">fmt</span><span class="p">.</span><span class="nf">Println</span><span class="p">(</span><span class="s">&#34;stop showing resp&#34;</span><span class="p">)</span>
+			<span class="k">return</span>
+		<span class="k">default</span><span class="p">:</span>
+			<span class="c1">//子goroutine里一般会处理一些IO任务，如读写数据库或者rpc调用，这里为了方便直接把数据打印
+</span><span class="c1"></span>			<span class="nx">fmt</span><span class="p">.</span><span class="nf">Println</span><span class="p">(</span><span class="s">&#34;printing &#34;</span><span class="p">,</span> <span class="nx">ctx</span><span class="p">.</span><span class="nf">Value</span><span class="p">(</span><span class="nf">favContextKey</span><span class="p">(</span><span class="s">&#34;resp&#34;</span><span class="p">)))</span>
+			<span class="nx">time</span><span class="p">.</span><span class="nf">Sleep</span><span class="p">(</span><span class="nx">time</span><span class="p">.</span><span class="nx">Second</span> <span class="o">*</span> <span class="mi">1</span><span class="p">)</span>
+		<span class="p">}</span>
+	<span class="p">}</span>
+<span class="p">}</span></pre></td></tr></table>
+</div>
+</div>
+<p>Wait 和 Cancel 两种并发控制方式，在使用 Go 开发服务的时候到处都有体现，只要使用了并发就会用到这两种模式。GW 启动5个协程发起5个并行的 RPC 调用之后，主<strong>协程就会进入等待状态，需要等待这5次 RPC 调用的返回结果</strong>，这就是 Wait 模式。另一中 Cancel 模式，在5次 RPC 调用返回之前，已经到达本次请求处理的总超时时间，这时候就需要 Cancel 所有未完成的 RPC 请求，<strong>提前结束协程</strong>。Wait 模式使用会比较广泛一些，而对于 Cancel 模式主要体现在<strong>超时控制和资源回收</strong>。而“context”，这个库几乎成为了并发控制和超时控制的标准做法。</p>
+
+<h3 id="context-使用规范">context 使用规范</h3>
+
+<ul>
+<li><p>Do not store Contexts inside a struct type; instead, pass a Context explicitly to each function that needs it. The Context should be the first parameter, typically named ctx；<strong>不要把Context存在一个结构体当中，显式地传入函数。Context变量需要作为第一个参数使用，一般命名为ctx</strong> (这也无形导致 context 满天飞，如果不需要的话，且也不想每次都传一个 context.BackGround() 可以对方法包装一层)；</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><span class="lnt">1
+</span><span class="lnt">2
+</span></pre></td>
+<td class="lntd">
+<pre class="chroma">// Do sends an HTTP request and returns an HTTP json response.
+func (client *Client) Do(c context.Context, args ...args) (err error) {}</pre></td></tr></table>
+</div>
+</div></li>
+
+<li><p>Do not pass a nil Context, even if a function permits it. Pass context.TODO if you are unsure about which Context to use；即使方法允许，也不要传入一个nil的Context，如果你不确定你要用什么Context的时候传一个context.TODO；</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span><span class="lnt">7
+</span></pre></td>
+<td class="lntd">
+<pre class="chroma">func test() {
+    client := newClient()
+
+    err := client.Do(context.TODO) // or 使用 context.BackGround()
+}
+
+func (client *Client) Do(c context.Context)(err error){}</pre></td></tr></table>
+</div>
+</div></li>
+
+<li><p>Use context Values only for request-scoped data that transits processes and APIs, not for passing optional parameters to functions；使用 context 的 Value 相关方法只应该用于在程序和接口中传递的和请求相关的元数据，不要用它来传递一些可选的参数(尽量少的传递一些可有可无的参数 ctx.withValue() 实质上是一个 interface{}，<strong>这给予了程序员足够大的自由</strong>，但也于此同时使得其类型转换时容易出现偏差，因为直接透过 context 接口并不能确定上层传递了什么具体参数这依赖与调用方的注释)；</p></li>
+
+<li><p>The same Context may be passed to functions running in different goroutines; Contexts are safe for simultaneous use by multiple goroutines；同样的 Context 可以用来传递到不同的 goroutine 中，Context 在多个 goroutine 中是安全的（<strong>mutex + channel 实现保证了线程安全</strong>）；</p></li>
+</ul>
+
+<h2 id="参考">参考</h2>
+
+<ul>
+<li><p><a href="https://mp.weixin.qq.com/s/I3BN6wVyk9H8ToKssP2NXw">深入理解 Go 语言之 Channel</a></p></li>
+
+<li><p><a href="go的channel使用与总结">go的channel使用与总结</a></p></li>
+
+<li><p><a href="https://draveness.me/golang/concurrency/golang-channel.html">面向信仰编程 - Channel</a></p></li>
+
+<li><p><a href="https://draveness.me/golang/concurrency/golang-context.html">面向信仰编程 - 上下文 Context</a></p></li>
+
+<li><p><a href="https://36kr.com/p/5073181">今日头条Go建千亿级微服务的实践</a></p></li>
+
+<li><p><a href="https://github.com/golang/go/wiki/CodeReviewComments#contexts">Go Code Review Comments</a></p></li>
+</ul>
+    </div>
+
+    
+<footer class="post-footer">
+      <div class="post-tags">
+          <a href="/tags/golang/">golang</a>
+          </div>
+      <nav class="post-nav">
+        
+        <a class="next" href="/post/%E6%B7%B1%E5%85%A5%E7%90%86%E8%A7%A3%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%B3%BB%E7%BB%9F-%E5%A4%A7%E7%AB%AF%E8%BF%98%E6%98%AF%E5%B0%8F%E7%AB%AF/">
+            <span class="next-text nav-default">深入理解计算机系统 大端还是小端？</span>
+            <span class="next-text nav-mobile">下一篇</span>
+            <i class="iconfont icon-right"></i>
+          </a>
+      </nav>
+    </footer>
+  </article>
+        </div>
+        
+  
+  
+
+  
+    <script src="https://utteranc.es/client.js"
+            repo="ruiHut/ruihut.github.io"
+            issue-term="pathname"
+            theme="github-light"
+            crossorigin="anonymous"
+            async>
+    </script>
+    <noscript>Please enable JavaScript to view the <a href="https://github.com/utterance">comments powered by utterances.</a></noscript>
+
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="social-links">
+      <a href="15197162859@163.com" class="iconfont icon-email" title="email"></a>
+      <a href="https://github.com/ruiHut" class="iconfont icon-github" title="github"></a>
+  <a href="http://ruihut.github.io/index.xml" type="application/rss+xml" class="iconfont icon-rss" title="rss"></a>
+</div>
+
+<div class="copyright">
+  <span class="copyright-year">
+    <span class="heart">
+      <i class="iconfont icon-heart"></i>
+    </span>
+    <span class="author">ZhouWang</span>
+  </span>
+</div>
+    </footer>
+
+    <div class="back-to-top" id="back-to-top">
+      <i class="iconfont icon-up"></i>
+    </div>
+  </div>
+  <script src="/lib/highlight/highlight.pack.js?v=20171001"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jquery@3.2.1/dist/jquery.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/slideout@1.0.1/dist/slideout.min.js" integrity="sha256-t+zJ/g8/KXIJMjSVQdnibt4dlaDxc9zXr/9oNPeWqdg=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.1.20/dist/jquery.fancybox.min.js" integrity="sha256-XVLffZaxoWfGUEbdzuLi7pwaUJv1cecsQJQqGLe7axY=" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/timeago.js@3.0.2/dist/timeago.min.js" integrity="sha256-jwCP0NAdCBloaIWTWHmW4i3snUNMHUNO+jr9rYd2iOI=" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/timeago.js@3.0.2/dist/timeago.locales.min.js" integrity="sha256-ZwofwC1Lf/faQCzN7nZtfijVV6hSwxjQMwXL4gn9qU8=" crossorigin="anonymous"></script>
+  <script><!-- NOTE: timeago.js uses the language code format like "zh_CN" (underscore and case sensitive) -->
+    var languageCode = "zh-cn".replace(/-/g, '_').replace(/_(.*)/, function ($0, $1) {return $0.replace($1, $1.toUpperCase());});
+    timeago().render(document.querySelectorAll('.timeago'), languageCode);
+    timeago.cancel();  
+  </script>
+<script type="text/javascript" src="/dist/even.26188efa.min.js"></script>
+
+
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+	ga('create', 'UA-138883536-1', 'auto');
+	ga('set', 'anonymizeIp', true);
+	ga('send', 'pageview');
+}
+</script>
+<script async src='https://www.google-analytics.com/analytics.js'></script>
+
+
+
+
+
+
+
+</body>
+</html>
