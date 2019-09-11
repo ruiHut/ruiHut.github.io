@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>channel on ZhouWang`s Blogs Space</title>
+    <link>http://ruihut.github.io/categories/channel/</link>
+    <description>Recent content in channel on ZhouWang`s Blogs Space</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>zh-cn</language>
+    <lastBuildDate>Tue, 10 Sep 2019 22:29:07 +0800</lastBuildDate>
+    
+	<atom:link href="http://ruihut.github.io/categories/channel/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>深入浅出理解 Golang Channel </title>
+      <link>http://ruihut.github.io/post/golang-channel/</link>
+      <pubDate>Tue, 10 Sep 2019 22:29:07 +0800</pubDate>
+      
+      <guid>http://ruihut.github.io/post/golang-channel/</guid>
+      <description>序 channel 是 Go 语言中的一个非常重要的特性, 是 Go 在并发编程中与大多数语言不同的一点，上文谈到大多数语言在解决并发同步问题上采用的是 “共享内存模型” 来</description>
+    </item>
+    
+  </channel>
+</rss>
